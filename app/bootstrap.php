@@ -30,7 +30,10 @@ $sessionName = Env::get('SESSION_NAME', 'laundry_booking_session') ?? 'laundry_b
 session_name($sessionName);
 
 $isHttps = (($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off')
-    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    || (
+        Env::getBool('TRUST_PROXY_HEADERS', false)
+        && strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https'
+    );
 
 session_set_cookie_params([
     'lifetime' => 0,
@@ -39,14 +42,20 @@ session_set_cookie_params([
     'samesite' => 'Lax',
     'secure' => $isHttps,
 ]);
+ini_set('session.use_only_cookies', '1');
+ini_set('session.use_strict_mode', '1');
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
 Response::securityHeaders();
+if ($isHttps) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
 
 set_exception_handler(static function (\Throwable $exception) use ($appDebug): void {
+    error_log((string) $exception);
     http_response_code(500);
 
     if ($appDebug) {

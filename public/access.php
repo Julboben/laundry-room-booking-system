@@ -11,17 +11,18 @@ use LaundryBooking\Http\Csrf;
 use LaundryBooking\Http\Request;
 use LaundryBooking\Http\Response;
 use LaundryBooking\Models\Setting;
+use LaundryBooking\Security\RateLimiter;
 use LaundryBooking\Services\SettingsService;
 
 use function LaundryBooking\Support\e;
 
-if (($_SESSION['resident_authenticated'] ?? false) === true) {
-    Response::redirect('/calendar.php');
-}
-
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
-$residentAccess = new ResidentAccess($settingsService);
+$residentAccess = new ResidentAccess($settingsService, new RateLimiter($pdo), Request::ip());
+
+if ($residentAccess->isAuthenticated()) {
+    Response::redirect('/calendar.php');
+}
 
 $error = null;
 

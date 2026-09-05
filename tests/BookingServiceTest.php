@@ -90,7 +90,10 @@ final class BookingServiceTest extends TestCase
 
         $this->assertTrue($result->success);
         $this->assertNotNull($result->bookingId);
-        $this->assertMatchesRegularExpression('/^\d{6}$/', $result->plainCode);
+        $this->assertMatchesRegularExpression(
+            '/^[2-9A-HJ-NP-Z]{4}(?:-[2-9A-HJ-NP-Z]{4}){3}$/',
+            $result->plainCode
+        );
     }
 
     public function testDoubleBookingIsPrevented(): void
@@ -135,7 +138,7 @@ final class BookingServiceTest extends TestCase
         $created = $this->bookingService->create($date, '13-16', 'Eva Krogh');
         $this->assertTrue($created->success);
 
-        $result = $this->bookingService->cancel($created->bookingId, '000000');
+        $result = $this->bookingService->cancel($created->bookingId, '9999-9999-9999-9999');
 
         $this->assertFalse($result->success);
         $this->assertSame('Aflysningskoden er ikke korrekt.', $result->error);
@@ -151,6 +154,25 @@ final class BookingServiceTest extends TestCase
         $result = $this->bookingService->cancel($created->bookingId, 'abc');
 
         $this->assertFalse($result->success);
-        $this->assertSame('Aflysningskoden skal være på 6 cifre.', $result->error);
+        $this->assertSame('Aflysningskoden har ikke et gyldigt format.', $result->error);
+    }
+
+    public function testLegacySixDigitCancellationCodeRemainsValid(): void
+    {
+        $date = $this->futureDate();
+        $created = $this->bookingService->create($date, '07-10', 'Grete Lund');
+        $legacyCode = '012345';
+        $statement = $this->pdo->prepare(
+            'UPDATE bookings SET cancellation_code_hash = :hash WHERE id = :id'
+        );
+        $statement->execute([
+            'hash' => password_hash($legacyCode, PASSWORD_DEFAULT),
+            'id' => $created->bookingId,
+        ]);
+
+        $result = $this->bookingService->cancel($created->bookingId, $legacyCode);
+
+        $this->assertTrue($result->success);
+        $this->assertNull($this->bookingService->find($created->bookingId));
     }
 }

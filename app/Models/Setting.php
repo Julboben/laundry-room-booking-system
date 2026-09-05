@@ -27,9 +27,11 @@ final class Setting
 
     public function set(string $key, string $value): void
     {
+        $upsertClause = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite'
+            ? 'ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value'
+            : 'ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)';
         $statement = $this->pdo->prepare(
-            'INSERT INTO settings (setting_key, setting_value) VALUES (:key, :value)
-             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)'
+            'INSERT INTO settings (setting_key, setting_value) VALUES (:key, :value) ' . $upsertClause
         );
         $statement->execute(['key' => $key, 'value' => $value]);
     }

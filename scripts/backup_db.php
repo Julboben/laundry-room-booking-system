@@ -36,9 +36,21 @@ $timestamp = (new DateTimeImmutable('now', new DateTimeZone(Env::get('APP_TIMEZO
     ->format('Ymd_His');
 $outputFile = $backupDir . "/backup_{$timestamp}.sql";
 
+$outputHandle = fopen($outputFile, 'xb');
+if ($outputHandle === false || !chmod($outputFile, 0600)) {
+    if (is_resource($outputHandle)) {
+        fclose($outputHandle);
+    }
+    @unlink($outputFile);
+    fwrite(STDERR, "Could not create a secure backup file.\n");
+    exit(1);
+}
+fclose($outputHandle);
+
 $mysqldumpAvailable = trim((string) shell_exec('command -v mysqldump 2>/dev/null')) !== '';
 
 if (!$mysqldumpAvailable) {
+    unlink($outputFile);
     fwrite(
         STDERR,
         "mysqldump is not available. Use your hosting control panel's backup/export tool " .
@@ -47,19 +59,39 @@ if (!$mysqldumpAvailable) {
     exit(1);
 }
 
+$credentialsFile = tempnam(sys_get_temp_dir(), 'laundry-booking-mysql-');
+if ($credentialsFile === false) {
+    fwrite(STDERR, "Could not create a temporary MySQL credentials file.\n");
+    exit(1);
+}
+
+$credentials = "[client]\n"
+    . 'user="' . addcslashes((string) $username, "\\\"\n\r") . "\"\n"
+    . 'password="' . addcslashes($password, "\\\"\n\r") . "\"\n";
+
+if (file_put_contents($credentialsFile, $credentials, LOCK_EX) === false || !chmod($credentialsFile, 0600)) {
+    @unlink($credentialsFile);
+    fwrite(STDERR, "Could not secure the temporary MySQL credentials file.\n");
+    exit(1);
+}
+
 $command = sprintf(
-    'mysqldump --host=%s --port=%s --user=%s %s %s > %s',
-    escapeshellarg($host),
+    'mysqldump --defaults-extra-file=%s --host=%s --port=%s %s > %s',
+    escapeshellarg($credentialsFile),
+    escapeshellarg((string) $host),
     escapeshellarg((string) $port),
-    escapeshellarg($username),
-    $password !== '' ? '--password=' . escapeshellarg($password) : '',
-    escapeshellarg($database),
+    escapeshellarg((string) $database),
     escapeshellarg($outputFile)
 );
 
-exec($command, $outputLines, $exitCode);
+try {
+    exec($command, $outputLines, $exitCode);
+} finally {
+    unlink($credentialsFile);
+}
 
 if ($exitCode !== 0) {
+    @unlink($outputFile);
     fwrite(STDERR, "Backup failed with exit code {$exitCode}.\n");
     exit(1);
 }

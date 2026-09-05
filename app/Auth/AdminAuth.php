@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LaundryBooking\Auth;
 
+use LaundryBooking\Security\RateLimiter;
 use LaundryBooking\Support\Env;
+use LogicException;
 
 /**
  * Separate authentication for administrators. Uses its own session
@@ -21,6 +23,14 @@ final class AdminAuth
 
     private const int LOCKOUT_SECONDS = 300;
 
+    private const int ACCOUNT_MAX_ATTEMPTS = 25;
+
+    public function __construct(
+        private readonly ?RateLimiter $rateLimiter = null,
+        private readonly string $clientIdentifier = 'unknown'
+    ) {
+    }
+
     public function isAuthenticated(): bool
     {
         return ($_SESSION[self::SESSION_KEY] ?? false) === true;
@@ -33,20 +43,20 @@ final class AdminAuth
 
     public function isLockedOut(): bool
     {
-        $lockedUntil = $_SESSION['admin_locked_until'] ?? null;
+        $limiter = $this->limiter();
 
-        return $lockedUntil !== null && time() < $lockedUntil;
+        return $limiter->isLocked('admin_client', $this->clientSubject())
+            || $limiter->isLocked('admin_account', $this->accountSubject());
     }
 
     public function lockoutRemainingSeconds(): int
     {
-        $lockedUntil = $_SESSION['admin_locked_until'] ?? null;
+        $limiter = $this->limiter();
 
-        if ($lockedUntil === null) {
-            return 0;
-        }
-
-        return max(0, $lockedUntil - time());
+        return max(
+            $limiter->remainingSeconds('admin_client', $this->clientSubject()),
+            $limiter->remainingSeconds('admin_account', $this->accountSubject())
+        );
     }
 
     public function attempt(string $username, string $password): bool
@@ -66,8 +76,8 @@ final class AdminAuth
             return false;
         }
 
-        $_SESSION['admin_failed_attempts'] = 0;
-        unset($_SESSION['admin_locked_until']);
+        $this->limiter()->clear('admin_client', $this->clientSubject());
+        $this->limiter()->clear('admin_account', $this->accountSubject());
 
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_regenerate_id(true);
@@ -81,12 +91,21 @@ final class AdminAuth
 
     private function registerFailure(): void
     {
-        $attempts = (int) ($_SESSION['admin_failed_attempts'] ?? 0) + 1;
-        $_SESSION['admin_failed_attempts'] = $attempts;
-
-        if ($attempts >= self::MAX_ATTEMPTS) {
-            $_SESSION['admin_locked_until'] = time() + self::LOCKOUT_SECONDS;
-        }
+        $limiter = $this->limiter();
+        $limiter->recordFailure(
+            'admin_client',
+            $this->clientSubject(),
+            self::MAX_ATTEMPTS,
+            self::LOCKOUT_SECONDS,
+            self::LOCKOUT_SECONDS
+        );
+        $limiter->recordFailure(
+            'admin_account',
+            $this->accountSubject(),
+            self::ACCOUNT_MAX_ATTEMPTS,
+            self::LOCKOUT_SECONDS,
+            self::LOCKOUT_SECONDS
+        );
     }
 
     /**
@@ -111,5 +130,21 @@ final class AdminAuth
     public function logout(): void
     {
         unset($_SESSION[self::SESSION_KEY], $_SESSION[self::SESSION_USERNAME_KEY], $_SESSION['admin_last_activity']);
+    }
+
+    private function limiter(): RateLimiter
+    {
+        return $this->rateLimiter
+            ?? throw new LogicException('A rate limiter is required for authentication attempts.');
+    }
+
+    private function clientSubject(): string
+    {
+        return $this->accountSubject() . '|' . $this->clientIdentifier;
+    }
+
+    private function accountSubject(): string
+    {
+        return Env::get('ADMIN_USERNAME', 'admin') ?? 'admin';
     }
 }

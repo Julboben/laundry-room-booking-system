@@ -18,6 +18,8 @@ $bookingRetentionDays = Env::getInt('OLD_BOOKING_RETENTION_DAYS', 180);
 
 $deletedBookings = $cleanupService->cleanupOldBookings($bookingRetentionDays);
 $deletedLogs = $cleanupService->cleanupOldLogs($bookingRetentionDays);
+$deletedRateLimits = $cleanupService->cleanupExpiredRateLimits(7);
 
 echo "Deleted {$deletedBookings} old booking(s).\n";
 echo "Deleted {$deletedLogs} old activity log entr" . ($deletedLogs === 1 ? 'y' : 'ies') . ".\n";
+echo "Deleted {$deletedRateLimits} expired rate-limit entr" . ($deletedRateLimits === 1 ? 'y' : 'ies') . ".\n";

@@ -77,8 +77,13 @@ final class Validator
             return 'Skriv aflysningskoden.';
         }
 
-        if (!preg_match('/^\d{6}$/', $code)) {
-            return 'Aflysningskoden skal være på 6 cifre.';
+        $normalized = strtoupper(str_replace(['-', ' '], '', trim($code)));
+
+        $isLegacyCode = preg_match('/^\d{6}$/', $normalized) === 1;
+        $isCurrentCode = preg_match('/^[2-9A-HJ-NP-Z]{16}$/', $normalized) === 1;
+
+        if (!$isLegacyCode && !$isCurrentCode) {
+            return 'Aflysningskoden har ikke et gyldigt format.';
         }
 
         return null;

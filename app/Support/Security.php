@@ -17,3 +17,15 @@ function e(?string $value): string
         'UTF-8'
     );
 }
+
+/**
+ * Prevent spreadsheet applications from interpreting exported text as formulas.
+ */
+function spreadsheet_safe(?string $value): string
+{
+    $value ??= '';
+
+    return preg_match('/^[\x00-\x20]*[=+\-@]/u', $value) === 1
+        ? "'" . $value
+        : $value;
+}

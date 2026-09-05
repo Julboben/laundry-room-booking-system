@@ -49,29 +49,39 @@ if (Request::isPost()) {
         } elseif ($newPropertyCode !== '' && mb_strlen($newPropertyCode) < 4) {
             $error = 'Den nye ejendomskode skal være mindst 4 tegn.';
         } else {
-            $settingsService->setBookingWeeksAhead($weeksAhead);
-            $settingsService->setCalendarMessage($calendarMessage);
+            $pdo->beginTransaction();
 
-            $activityLog->log(
-                actorType: 'admin',
-                action: 'settings_updated',
-                ipAddress: Request::ip(),
-                userAgent: Request::userAgent(),
-                details: 'booking_weeks_ahead=' . $weeksAhead
-            );
-
-            if ($newPropertyCode !== '') {
-                $settingsService->setPropertyCodeHash(password_hash($newPropertyCode, PASSWORD_DEFAULT));
-
+            try {
+                $settingsService->setBookingWeeksAhead($weeksAhead);
+                $settingsService->setCalendarMessage($calendarMessage);
                 $activityLog->log(
                     actorType: 'admin',
-                    action: 'property_code_changed',
+                    action: 'settings_updated',
                     ipAddress: Request::ip(),
                     userAgent: Request::userAgent(),
+                    details: 'booking_weeks_ahead=' . $weeksAhead
                 );
-            }
 
-            $success = 'Indstillingerne er gemt.';
+                if ($newPropertyCode !== '') {
+                    $settingsService->setPropertyCodeHash(password_hash($newPropertyCode, PASSWORD_DEFAULT));
+
+                    $activityLog->log(
+                        actorType: 'admin',
+                        action: 'property_code_changed',
+                        ipAddress: Request::ip(),
+                        userAgent: Request::userAgent(),
+                    );
+                }
+
+                $pdo->commit();
+                $success = 'Indstillingerne er gemt.';
+            } catch (\Throwable $exception) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                throw $exception;
+            }
         }
     }
 }

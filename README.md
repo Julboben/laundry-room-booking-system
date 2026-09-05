@@ -15,8 +15,8 @@ framework, no WebSockets.
   `10:00–13:00`, `13:00–16:00`, `16:00–19:00`.
 - Booking with a required, visible name and a mandatory privacy
   checkbox.
-- A six-digit cancellation code per booking, shown once, stored only
-  as a `password_hash()`.
+- A high-entropy, human-readable cancellation code per booking, shown
+  once and stored only as a `password_hash()`.
 - Manual 30-minute takeover rule (displayed, never enforced
   automatically).
 - Separate admin authentication with its own session, rate limiting,
@@ -28,7 +28,7 @@ framework, no WebSockets.
 
 ## Requirements
 
-- PHP 8.3+
+- PHP 8.3+ with `mbstring` and `pdo_mysql`
 - MySQL or MariaDB
 - Git
 - Composer (for autoloading and the dev-only PHPUnit dependency)
@@ -122,31 +122,46 @@ Do not use the shared kiosk tablet for admin access.
 
 ## Deployment
 
-Deployment is manual only, triggered from the GitHub Actions "Deploy"
-workflow (`workflow_dispatch`). It checks out the repository, installs
-PHP 8.3 and production Composer dependencies, builds an artifact that
-excludes `.env`, Git metadata, `storage/backups`, `storage/logs`, and
-`tests/`, and uploads it over SFTP using credentials stored in GitHub
-Secrets (`DEPLOY_HOST`, `DEPLOY_USERNAME`, `DEPLOY_PASSWORD`,
-`DEPLOY_PORT`, `DEPLOY_REMOTE_PATH`). Never commit deployment
-credentials to the repository.
+Railway is the recommended production host. The
+`.railway/railway.ts` Infrastructure as Code definition creates the
+web service, private MySQL database, and daily cleanup job in Railway's
+EU region. Railway detects PHP and serves it with FrankenPHP. The
+committed `Caddyfile` restricts the document root to `public/`, so
+application code and operational scripts are not web accessible.
+
+1. Install the IaC dependency with `npm install --prefix .railway`.
+2. Run `railway login`, `railway link`, and `railway config plan`.
+3. Review the plan, then run `railway config apply`.
+4. Set the preserved `APP_URL`, `RESIDENT_PROPERTY_CODE_HASH`,
+   `ADMIN_USERNAME`, and `ADMIN_PASSWORD_HASH` variables on the web
+   service. Generate the hashes with the commands from the local setup
+   section.
+5. Generate a Railway domain, or attach a custom domain. HTTPS is
+   provisioned automatically.
+6. Enable scheduled backups on the MySQL service's volume. Do not use
+   application-local files as the production backup strategy.
+
+The configuration runs migrations before web deployments, activates a
+release only after `/health.php` succeeds, and keeps the web service at
+one replica because PHP sessions use local filesystem storage. A
+redeploy can require users to sign in again. Pushes and pull requests
+are checked by `.github/workflows/ci.yml`; Railway deploys `main` only
+after you apply the infrastructure configuration.
 
 ### Production checklist
 
 1. Create the domain or subdomain and enable HTTPS.
 2. Create the production database and a dedicated database user.
 3. Set the web server's document root to `public/`.
-4. Upload the application (via the deploy workflow or manually).
-5. Create a production `.env` (never commit it) with `APP_ENV=production`
-   and `APP_DEBUG=false`.
-6. Run `php scripts/run_migrations.php` on the server.
-7. Generate the property-code and admin-password hashes and set them
+4. Configure production environment variables outside Git.
+5. Run `php scripts/run_migrations.php` on the server.
+6. Generate the property-code and admin-password hashes and set them
    in the production `.env`.
-8. Test `/health.php`.
-9. Test booking creation and cancellation end to end.
-10. Test admin login and booking deletion.
-11. Configure scheduled backups and cleanup.
-12. Store admin credentials securely outside Git.
+7. Test `/health.php`.
+8. Test booking creation and cancellation end to end.
+9. Test admin login and booking deletion.
+10. Configure scheduled backups and cleanup.
+11. Store admin credentials securely outside Git.
 
 ## Security notes
 
@@ -157,10 +172,20 @@ credentials to the repository.
 - Cancellation codes are only ever stored as `password_hash()` values
   and are never logged or shown again after the initial booking
   confirmation.
-- Resident and admin access, and cancellation attempts, are rate
-  limited (5 failed attempts locks out for 5 minutes).
+- Resident and admin access, and cancellation attempts, use
+  database-backed rate limits that cannot be bypassed by clearing
+  cookies. Aggregate limits also constrain distributed guessing.
+- Changing the shared property code immediately revokes existing
+  resident sessions.
 - Production error handling shows a generic Danish message instead of
   stack traces.
+
+Resident names are visible to authenticated residents. IP addresses
+and user-agent strings are stored in the activity log and removed by
+the configured retention cleanup. The operator should publish a
+privacy notice, choose an appropriate retention period, sign a data
+processing agreement with the host, and select an EU region where
+required.
 
 ## Out of scope for version 1
 

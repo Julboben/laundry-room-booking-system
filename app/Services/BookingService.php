@@ -11,6 +11,7 @@ use LaundryBooking\Support\DateHelper;
 use LaundryBooking\Support\Validator;
 use PDO;
 use PDOException;
+use Throwable;
 
 /**
  * Result of a booking-creation attempt.
@@ -159,7 +160,7 @@ final class BookingService
 
         $slot = self::slots()[$slotKey];
         $normalizedName = Validator::normalizeName($name);
-        $plainCode = $this->codeService->generateSixDigitCode();
+        $plainCode = $this->codeService->generateCancellationCode();
         $codeHash = $this->codeService->hashCode($plainCode);
 
         $this->pdo->beginTransaction();
@@ -180,25 +181,27 @@ final class BookingService
 
             $bookingId = (int) $this->pdo->lastInsertId();
 
-            $this->pdo->commit();
-        } catch (PDOException $exception) {
-            $this->pdo->rollBack();
+            $this->activityLog->log(
+                actorType: 'resident',
+                action: 'booking_created',
+                bookingId: $bookingId,
+                ipAddress: $ipAddress,
+                userAgent: $userAgent,
+                details: sprintf('%s %s', $date, $slotKey)
+            );
 
-            if ($exception->getCode() === '23000') {
+            $this->pdo->commit();
+        } catch (Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            if ($exception instanceof PDOException && $exception->getCode() === '23000') {
                 return new BookingCreationResult(false, error: 'Tiden er desværre allerede booket.');
             }
 
             throw $exception;
         }
-
-        $this->activityLog->log(
-            actorType: 'resident',
-            action: 'booking_created',
-            bookingId: $bookingId,
-            ipAddress: $ipAddress,
-            userAgent: $userAgent,
-            details: sprintf('%s %s', $date, $slotKey)
-        );
 
         return new BookingCreationResult(true, bookingId: $bookingId, plainCode: $plainCode);
     }
@@ -226,34 +229,53 @@ final class BookingService
             return new BookingCancellationResult(false, error: $formatError);
         }
 
-        $booking = $this->find($bookingId);
+        $this->pdo->beginTransaction();
 
-        if ($booking === null) {
-            return new BookingCancellationResult(false, error: 'Bookingen findes ikke.');
-        }
+        try {
+            $lockSuffix = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+            $statement = $this->pdo->prepare(
+                'SELECT cancellation_code_hash FROM bookings WHERE id = :id' . $lockSuffix
+            );
+            $statement->execute(['id' => $bookingId]);
+            $booking = $statement->fetch(PDO::FETCH_ASSOC);
 
-        if (!$this->codeService->verifyCode($code, $booking['cancellation_code_hash'])) {
+            if ($booking === false) {
+                $this->pdo->rollBack();
+                return new BookingCancellationResult(false, error: 'Bookingen findes ikke.');
+            }
+
+            if (!$this->codeService->verifyCode($code, $booking['cancellation_code_hash'])) {
+                $this->pdo->rollBack();
+                $this->activityLog->log(
+                    actorType: 'resident',
+                    action: 'booking_cancel_failed',
+                    bookingId: $bookingId,
+                    ipAddress: $ipAddress,
+                    userAgent: $userAgent,
+                );
+
+                return new BookingCancellationResult(false, error: 'Aflysningskoden er ikke korrekt.');
+            }
+
+            $statement = $this->pdo->prepare('DELETE FROM bookings WHERE id = :id');
+            $statement->execute(['id' => $bookingId]);
+
             $this->activityLog->log(
                 actorType: 'resident',
-                action: 'booking_cancel_failed',
+                action: 'booking_cancelled',
                 bookingId: $bookingId,
                 ipAddress: $ipAddress,
                 userAgent: $userAgent,
             );
 
-            return new BookingCancellationResult(false, error: 'Aflysningskoden er ikke korrekt.');
+            $this->pdo->commit();
+        } catch (Throwable $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw $exception;
         }
-
-        $statement = $this->pdo->prepare('DELETE FROM bookings WHERE id = :id');
-        $statement->execute(['id' => $bookingId]);
-
-        $this->activityLog->log(
-            actorType: 'resident',
-            action: 'booking_cancelled',
-            bookingId: $bookingId,
-            ipAddress: $ipAddress,
-            userAgent: $userAgent,
-        );
 
         return new BookingCancellationResult(true);
     }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace LaundryBooking\Auth;
 
+use LaundryBooking\Security\RateLimiter;
 use LaundryBooking\Services\SettingsService;
-use LaundryBooking\Support\Env;
+use LogicException;
 
 /**
  * Handles the shared property-code access used by residents. There are
@@ -20,32 +21,45 @@ final class ResidentAccess
 
     private const int LOCKOUT_SECONDS = 300;
 
+    private const int PROPERTY_MAX_ATTEMPTS = 50;
+
     public function __construct(
-        private readonly SettingsService $settings
+        private readonly SettingsService $settings,
+        private readonly ?RateLimiter $rateLimiter = null,
+        private readonly string $clientIdentifier = 'unknown'
     ) {
     }
 
     public function isAuthenticated(): bool
     {
-        return ($_SESSION[self::SESSION_KEY] ?? false) === true;
+        if (($_SESSION[self::SESSION_KEY] ?? false) !== true) {
+            return false;
+        }
+
+        $sessionFingerprint = $_SESSION['resident_code_fingerprint'] ?? null;
+        $currentFingerprint = $this->codeFingerprint();
+
+        return is_string($sessionFingerprint)
+            && $currentFingerprint !== null
+            && hash_equals($currentFingerprint, $sessionFingerprint);
     }
 
     public function isLockedOut(): bool
     {
-        $lockedUntil = $_SESSION['resident_locked_until'] ?? null;
+        $limiter = $this->limiter();
 
-        return $lockedUntil !== null && time() < $lockedUntil;
+        return $limiter->isLocked('resident_client', $this->clientIdentifier)
+            || $limiter->isLocked('resident_property', 'shared');
     }
 
     public function lockoutRemainingSeconds(): int
     {
-        $lockedUntil = $_SESSION['resident_locked_until'] ?? null;
+        $limiter = $this->limiter();
 
-        if ($lockedUntil === null) {
-            return 0;
-        }
-
-        return max(0, $lockedUntil - time());
+        return max(
+            $limiter->remainingSeconds('resident_client', $this->clientIdentifier),
+            $limiter->remainingSeconds('resident_property', 'shared')
+        );
     }
 
     public function attempt(string $code): bool
@@ -61,29 +75,52 @@ final class ResidentAccess
             return false;
         }
 
-        $_SESSION['resident_failed_attempts'] = 0;
-        unset($_SESSION['resident_locked_until']);
+        $this->limiter()->clear('resident_client', $this->clientIdentifier);
+        $this->limiter()->clear('resident_property', 'shared');
 
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_regenerate_id(true);
         }
         $_SESSION[self::SESSION_KEY] = true;
+        $_SESSION['resident_code_fingerprint'] = hash('sha256', $hash);
 
         return true;
     }
 
     private function registerFailure(): void
     {
-        $attempts = (int) ($_SESSION['resident_failed_attempts'] ?? 0) + 1;
-        $_SESSION['resident_failed_attempts'] = $attempts;
-
-        if ($attempts >= self::MAX_ATTEMPTS) {
-            $_SESSION['resident_locked_until'] = time() + self::LOCKOUT_SECONDS;
-        }
+        $limiter = $this->limiter();
+        $limiter->recordFailure(
+            'resident_client',
+            $this->clientIdentifier,
+            self::MAX_ATTEMPTS,
+            self::LOCKOUT_SECONDS,
+            self::LOCKOUT_SECONDS
+        );
+        $limiter->recordFailure(
+            'resident_property',
+            'shared',
+            self::PROPERTY_MAX_ATTEMPTS,
+            self::LOCKOUT_SECONDS,
+            self::LOCKOUT_SECONDS
+        );
     }
 
     public function logout(): void
     {
-        unset($_SESSION[self::SESSION_KEY]);
+        unset($_SESSION[self::SESSION_KEY], $_SESSION['resident_code_fingerprint']);
+    }
+
+    private function limiter(): RateLimiter
+    {
+        return $this->rateLimiter
+            ?? throw new LogicException('A rate limiter is required for authentication attempts.');
+    }
+
+    private function codeFingerprint(): ?string
+    {
+        $hash = $this->settings->getPropertyCodeHash();
+
+        return $hash === null || $hash === '' ? null : hash('sha256', $hash);
     }
 }

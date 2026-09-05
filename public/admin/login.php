@@ -9,10 +9,12 @@ use LaundryBooking\Auth\AdminAuth;
 use LaundryBooking\Http\Csrf;
 use LaundryBooking\Http\Request;
 use LaundryBooking\Http\Response;
+use LaundryBooking\Database\Connection;
+use LaundryBooking\Security\RateLimiter;
 
 use function LaundryBooking\Support\e;
 
-$adminAuth = new AdminAuth();
+$adminAuth = new AdminAuth(new RateLimiter(Connection::get()), Request::ip());
 
 if ($adminAuth->isAuthenticated()) {
     Response::redirect('/admin/index.php');

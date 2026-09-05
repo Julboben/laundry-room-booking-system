@@ -5,5 +5,7 @@
 /storage/logs/*
 !/storage/logs/.gitkeep
 .phpunit.result.cache
+/.phpunit.cache/
+/.railway/node_modules/
 /.idea/
 /.vscode/

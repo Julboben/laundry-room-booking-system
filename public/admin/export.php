@@ -10,6 +10,8 @@ use LaundryBooking\Http\Response;
 use LaundryBooking\Models\ActivityLog;
 use LaundryBooking\Http\Request;
 
+use function LaundryBooking\Support\spreadsheet_safe;
+
 $adminAuth = new AdminAuth();
 
 if (!$adminAuth->isAuthenticated()) {
@@ -50,7 +52,7 @@ while ($row = $statement->fetch()) {
         $row['slot_key'],
         $row['start_time'],
         $row['end_time'],
-        $row['booking_name'],
+        spreadsheet_safe($row['booking_name']),
         $row['created_at'],
     ]);
 }

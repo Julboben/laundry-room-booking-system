@@ -16,36 +16,39 @@ final class CodeServiceTest extends TestCase
         $this->codeService = new CodeService();
     }
 
-    public function testGeneratesSixDigitCode(): void
+    public function testGeneratesHighEntropyCancellationCode(): void
     {
-        $code = $this->codeService->generateSixDigitCode();
+        $code = $this->codeService->generateCancellationCode();
 
-        $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
+        $this->assertMatchesRegularExpression('/^[2-9A-HJ-NP-Z]{4}(?:-[2-9A-HJ-NP-Z]{4}){3}$/', $code);
     }
 
-    public function testGeneratesCodesWithLeadingZeroesEventually(): void
+    public function testGeneratedCodesAreNotRepeatedInSample(): void
     {
-        $sawLeadingZero = false;
+        $codes = [];
 
         for ($i = 0; $i < 200; $i++) {
-            $code = $this->codeService->generateSixDigitCode();
-            $this->assertSame(6, strlen($code));
-
-            if ($code[0] === '0') {
-                $sawLeadingZero = true;
-            }
+            $codes[] = $this->codeService->generateCancellationCode();
         }
 
-        $this->assertTrue($sawLeadingZero, 'Expected at least one generated code to start with a leading zero.');
+        $this->assertCount(200, array_unique($codes));
     }
 
     public function testHashAndVerifyRoundTrip(): void
     {
-        $code = '012345';
+        $code = '2345-6789-ABCD-EFGH';
         $hash = $this->codeService->hashCode($code);
 
         $this->assertNotSame($code, $hash);
         $this->assertTrue($this->codeService->verifyCode($code, $hash));
-        $this->assertFalse($this->codeService->verifyCode('999999', $hash));
+        $this->assertTrue($this->codeService->verifyCode('23456789abcdefgh', $hash));
+        $this->assertFalse($this->codeService->verifyCode('9999-9999-9999-9999', $hash));
+    }
+
+    public function testLegacySixDigitCodesStillVerify(): void
+    {
+        $hash = password_hash('012345', PASSWORD_DEFAULT);
+
+        $this->assertTrue($this->codeService->verifyCode('012345', $hash));
     }
 }

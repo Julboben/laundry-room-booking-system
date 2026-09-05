@@ -41,21 +41,33 @@ if (Request::isPost()) {
         $deleteId = (int) (Request::post('delete_id') ?? '0');
 
         if ($deleteId > 0) {
-            $statement = $pdo->prepare('DELETE FROM bookings WHERE id = :id');
-            $statement->execute(['id' => $deleteId]);
+            $pdo->beginTransaction();
 
-            if ($statement->rowCount() > 0) {
-                $activityLog->log(
-                    actorType: 'admin',
-                    action: 'booking_deleted',
-                    bookingId: $deleteId,
-                    ipAddress: Request::ip(),
-                    userAgent: Request::userAgent(),
-                    details: 'Deleted by ' . ($adminAuth->currentUsername() ?? 'unknown')
-                );
-                $success = 'Bookingen er slettet.';
-            } else {
-                $error = 'Bookingen findes ikke.';
+            try {
+                $statement = $pdo->prepare('DELETE FROM bookings WHERE id = :id');
+                $statement->execute(['id' => $deleteId]);
+
+                if ($statement->rowCount() === 0) {
+                    $pdo->rollBack();
+                    $error = 'Bookingen findes ikke.';
+                } else {
+                    $activityLog->log(
+                        actorType: 'admin',
+                        action: 'booking_deleted',
+                        bookingId: $deleteId,
+                        ipAddress: Request::ip(),
+                        userAgent: Request::userAgent(),
+                        details: 'Deleted by ' . ($adminAuth->currentUsername() ?? 'unknown')
+                    );
+                    $pdo->commit();
+                    $success = 'Bookingen er slettet.';
+                }
+            } catch (\Throwable $exception) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+
+                throw $exception;
             }
         }
     }

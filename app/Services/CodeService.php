@@ -5,27 +5,38 @@ declare(strict_types=1);
 namespace LaundryBooking\Services;
 
 /**
- * Cryptographically secure six-digit code generation and hashing.
+ * Cryptographically secure, human-readable cancellation tokens.
  */
 final class CodeService
 {
-    public function generateSixDigitCode(): string
+    private const string ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
+    private const int TOKEN_LENGTH = 16;
+
+    public function generateCancellationCode(): string
     {
-        return str_pad(
-            (string) random_int(0, 999999),
-            6,
-            '0',
-            STR_PAD_LEFT
-        );
+        $characters = '';
+        $maxIndex = strlen(self::ALPHABET) - 1;
+
+        for ($index = 0; $index < self::TOKEN_LENGTH; $index++) {
+            $characters .= self::ALPHABET[random_int(0, $maxIndex)];
+        }
+
+        return implode('-', str_split($characters, 4));
     }
 
     public function hashCode(string $code): string
     {
-        return password_hash($code, PASSWORD_DEFAULT);
+        return password_hash($this->normalize($code), PASSWORD_DEFAULT);
     }
 
     public function verifyCode(string $code, string $hash): bool
     {
-        return password_verify($code, $hash);
+        return password_verify($this->normalize($code), $hash);
+    }
+
+    public function normalize(string $code): string
+    {
+        return strtoupper(str_replace(['-', ' '], '', trim($code)));
     }
 }
