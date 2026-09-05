@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: laundry_booking_test
+          MYSQL_ROOT_PASSWORD: test-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=test-password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_mysql
+          tools: composer
+          coverage: none
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Configure test environment
+        run: |
+          {
+            echo "APP_ENV=test"
+            echo "APP_DEBUG=true"
+            echo "APP_TIMEZONE=Europe/Copenhagen"
+            echo "DB_HOST=127.0.0.1"
+            echo "DB_PORT=3306"
+            echo "DB_DATABASE=laundry_booking_test"
+            echo "DB_USERNAME=root"
+            echo "DB_PASSWORD=test-password"
+          } > .env
+
+      - name: Run database migrations
+        run: php scripts/run_migrations.php
+
+      - name: Run tests
+        run: composer test

@@ -1,0 +1,11 @@
+{
+  "name": "laundry-room-booking-railway",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "railway": "3.11.0"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
