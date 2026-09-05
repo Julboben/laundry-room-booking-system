@@ -1,0 +1,9 @@
+.env
+/vendor/
+/storage/backups/*
+!/storage/backups/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+.phpunit.result.cache
+/.idea/
+/.vscode/
