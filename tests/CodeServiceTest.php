@@ -16,39 +16,32 @@ final class CodeServiceTest extends TestCase
         $this->codeService = new CodeService();
     }
 
-    public function testGeneratesHighEntropyCancellationCode(): void
+    public function testGeneratesConfiguredLengthCancellationCode(): void
     {
-        $code = $this->codeService->generateCancellationCode();
-
-        $this->assertMatchesRegularExpression('/^[2-9A-HJ-NP-Z]{4}(?:-[2-9A-HJ-NP-Z]{4}){3}$/', $code);
+        foreach ([4, 6, 8] as $length) {
+            for ($index = 0; $index < 20; $index++) {
+                $code = $this->codeService->generateCancellationCode($length);
+                $this->assertMatchesRegularExpression('/^\d{' . $length . '}$/', $code);
+            }
+        }
     }
 
-    public function testGeneratedCodesAreNotRepeatedInSample(): void
+    public function testRejectsUnsupportedCancellationCodeLength(): void
     {
-        $codes = [];
+        $this->expectException(\InvalidArgumentException::class);
 
-        for ($i = 0; $i < 200; $i++) {
-            $codes[] = $this->codeService->generateCancellationCode();
-        }
-
-        $this->assertCount(200, array_unique($codes));
+        $this->codeService->generateCancellationCode(3);
     }
 
     public function testHashAndVerifyRoundTrip(): void
     {
-        $code = '2345-6789-ABCD-EFGH';
+        $code = '0427';
         $hash = $this->codeService->hashCode($code);
 
         $this->assertNotSame($code, $hash);
         $this->assertTrue($this->codeService->verifyCode($code, $hash));
-        $this->assertTrue($this->codeService->verifyCode('23456789abcdefgh', $hash));
-        $this->assertFalse($this->codeService->verifyCode('9999-9999-9999-9999', $hash));
+        $this->assertTrue($this->codeService->verifyCode('0427', $hash));
+        $this->assertFalse($this->codeService->verifyCode('0428', $hash));
     }
 
-    public function testLegacySixDigitCodesStillVerify(): void
-    {
-        $hash = password_hash('012345', PASSWORD_DEFAULT);
-
-        $this->assertTrue($this->codeService->verifyCode('012345', $hash));
-    }
 }

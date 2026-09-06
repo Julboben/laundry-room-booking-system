@@ -4,6 +4,8 @@
 !/storage/backups/.gitkeep
 /storage/logs/*
 !/storage/logs/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
 .phpunit.result.cache
 /.phpunit.cache/
 /.railway/node_modules/

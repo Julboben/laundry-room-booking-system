@@ -37,6 +37,7 @@ final class BookingServiceTest extends TestCase
 
         $settings = new Setting($this->pdo);
         $settings->set('booking_weeks_ahead', '8');
+        $settings->set('cancellation_code_length', '4');
 
         $settingsService = new SettingsService($settings);
         $this->bookingService = new BookingService(
@@ -90,10 +91,7 @@ final class BookingServiceTest extends TestCase
 
         $this->assertTrue($result->success);
         $this->assertNotNull($result->bookingId);
-        $this->assertMatchesRegularExpression(
-            '/^[2-9A-HJ-NP-Z]{4}(?:-[2-9A-HJ-NP-Z]{4}){3}$/',
-            $result->plainCode
-        );
+        $this->assertMatchesRegularExpression('/^\d{4}$/', $result->plainCode);
     }
 
     public function testDoubleBookingIsPrevented(): void
@@ -138,7 +136,8 @@ final class BookingServiceTest extends TestCase
         $created = $this->bookingService->create($date, '13-16', 'Eva Krogh');
         $this->assertTrue($created->success);
 
-        $result = $this->bookingService->cancel($created->bookingId, '9999-9999-9999-9999');
+        $incorrectCode = $created->plainCode === '0000' ? '0001' : '0000';
+        $result = $this->bookingService->cancel($created->bookingId, $incorrectCode);
 
         $this->assertFalse($result->success);
         $this->assertSame('Aflysningskoden er ikke korrekt.', $result->error);
@@ -154,25 +153,7 @@ final class BookingServiceTest extends TestCase
         $result = $this->bookingService->cancel($created->bookingId, 'abc');
 
         $this->assertFalse($result->success);
-        $this->assertSame('Aflysningskoden har ikke et gyldigt format.', $result->error);
+        $this->assertSame('Aflysningskoden skal bestå af 4 cifre.', $result->error);
     }
 
-    public function testLegacySixDigitCancellationCodeRemainsValid(): void
-    {
-        $date = $this->futureDate();
-        $created = $this->bookingService->create($date, '07-10', 'Grete Lund');
-        $legacyCode = '012345';
-        $statement = $this->pdo->prepare(
-            'UPDATE bookings SET cancellation_code_hash = :hash WHERE id = :id'
-        );
-        $statement->execute([
-            'hash' => password_hash($legacyCode, PASSWORD_DEFAULT),
-            'id' => $created->bookingId,
-        ]);
-
-        $result = $this->bookingService->cancel($created->bookingId, $legacyCode);
-
-        $this->assertTrue($result->success);
-        $this->assertNull($this->bookingService->find($created->bookingId));
-    }
 }

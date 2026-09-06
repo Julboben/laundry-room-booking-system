@@ -66,4 +66,28 @@ final class SettingsService
     {
         $this->settings->set('calendar_message', $message);
     }
+
+    public function getWeatherPostcode(): string
+    {
+        $value = trim($this->settings->get('weather_postcode') ?? '');
+
+        return preg_match('/^\d{4}$/', $value) === 1 ? $value : '1352';
+    }
+
+    public function setWeatherPostcode(string $postcode): void
+    {
+        $this->settings->set('weather_postcode', $postcode);
+    }
+
+    public function getCancellationCodeLength(): int
+    {
+        $length = (int) ($this->settings->get('cancellation_code_length') ?? '4');
+
+        return max(4, min(8, $length));
+    }
+
+    public function setCancellationCodeLength(int $length): void
+    {
+        $this->settings->set('cancellation_code_length', (string) $length);
+    }
 }

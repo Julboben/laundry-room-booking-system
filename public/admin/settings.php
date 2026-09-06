@@ -42,10 +42,16 @@ if (Request::isPost()) {
     } else {
         $weeksAhead = (int) (Request::post('booking_weeks_ahead', '8') ?? '8');
         $calendarMessage = Request::post('calendar_message', '') ?? '';
+        $weatherPostcode = trim(Request::post('weather_postcode', '') ?? '');
+        $cancellationCodeLength = (int) (Request::post('cancellation_code_length', '4') ?? '4');
         $newPropertyCode = trim(Request::post('new_property_code', '') ?? '');
 
         if ($weeksAhead < 1 || $weeksAhead > 52) {
             $error = 'Antal uger skal være mellem 1 og 52.';
+        } elseif (preg_match('/^\d{4}$/', $weatherPostcode) !== 1) {
+            $error = 'Postnummeret skal bestå af 4 cifre.';
+        } elseif ($cancellationCodeLength < 4 || $cancellationCodeLength > 8) {
+            $error = 'Aflysningskoden skal være mellem 4 og 8 cifre.';
         } elseif ($newPropertyCode !== '' && mb_strlen($newPropertyCode) < 4) {
             $error = 'Den nye ejendomskode skal være mindst 4 tegn.';
         } else {
@@ -54,12 +60,16 @@ if (Request::isPost()) {
             try {
                 $settingsService->setBookingWeeksAhead($weeksAhead);
                 $settingsService->setCalendarMessage($calendarMessage);
+                $settingsService->setWeatherPostcode($weatherPostcode);
+                $settingsService->setCancellationCodeLength($cancellationCodeLength);
                 $activityLog->log(
                     actorType: 'admin',
                     action: 'settings_updated',
                     ipAddress: Request::ip(),
                     userAgent: Request::userAgent(),
                     details: 'booking_weeks_ahead=' . $weeksAhead
+                                            . ', weather_postcode=' . $weatherPostcode
+                                            . ', cancellation_code_length=' . $cancellationCodeLength
                 );
 
                 if ($newPropertyCode !== '') {
@@ -88,6 +98,8 @@ if (Request::isPost()) {
 
 $weeksAhead = $settingsService->getBookingWeeksAhead();
 $calendarMessage = $settingsService->getCalendarMessage();
+$weatherPostcode = $settingsService->getWeatherPostcode();
+$cancellationCodeLength = $settingsService->getCancellationCodeLength();
 
 layout_start('Indstillinger');
 ?>
@@ -118,6 +130,33 @@ layout_start('Indstillinger');
 
         <label for="calendar_message">Besked i kalenderen (valgfri)</label>
         <textarea id="calendar_message" name="calendar_message" maxlength="500"><?= e($calendarMessage) ?></textarea>
+
+        <label for="weather_postcode">Postnummer til tørrevejr</label>
+        <input
+            type="text"
+            id="weather_postcode"
+            name="weather_postcode"
+            value="<?= e($weatherPostcode) ?>"
+            inputmode="numeric"
+            pattern="\d{4}"
+            maxlength="4"
+            aria-describedby="weather_postcode_help"
+            required
+        >
+        <small class="form-hint" id="weather_postcode_help">Bruges til vejrudsigten i kalenderen. Standard er 1352 København K.</small>
+
+        <label for="cancellation_code_length">Antal cifre i aflysningskoden</label>
+        <input
+            type="number"
+            id="cancellation_code_length"
+            name="cancellation_code_length"
+            value="<?= (int) $cancellationCodeLength ?>"
+            min="4"
+            max="8"
+            aria-describedby="cancellation_code_length_help"
+            required
+        >
+        <small class="form-hint" id="cancellation_code_length_help">Mellem 4 og 8 cifre. En ændring gælder straks, så brug helst den samme længde under aktive bookinger.</small>
 
         <label for="new_property_code">Ny ejendomskode (lad stå tom for ikke at ændre)</label>
         <input type="text" id="new_property_code" name="new_property_code" autocomplete="off">

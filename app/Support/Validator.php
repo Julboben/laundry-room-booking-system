@@ -71,19 +71,14 @@ final class Validator
         return trim($name);
     }
 
-    public static function validateCancellationCodeFormat(string $code): ?string
+    public static function validateCancellationCodeFormat(string $code, int $length = 4): ?string
     {
         if (trim($code) === '') {
             return 'Skriv aflysningskoden.';
         }
 
-        $normalized = strtoupper(str_replace(['-', ' '], '', trim($code)));
-
-        $isLegacyCode = preg_match('/^\d{6}$/', $normalized) === 1;
-        $isCurrentCode = preg_match('/^[2-9A-HJ-NP-Z]{16}$/', $normalized) === 1;
-
-        if (!$isLegacyCode && !$isCurrentCode) {
-            return 'Aflysningskoden har ikke et gyldigt format.';
+        if (preg_match('/^\d{' . $length . '}$/', trim($code)) !== 1) {
+            return sprintf('Aflysningskoden skal bestå af %d cifre.', $length);
         }
 
         return null;

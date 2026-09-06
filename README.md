@@ -1,22 +1,29 @@
 # Vaskekalender – Laundry-Room Booking System
 
-A reliable, browser-based laundry-room booking system for a residential
-association. Residents share one property access code (no individual
-accounts). The public interface is in Danish.
+A browser-based laundry-room calendar designed for a shared, wall-mounted
+iPad in a residential association. Residents use one property access code
+to view available times, book a machine, and cancel a booking without
+needing individual accounts. The resident interface is in Danish.
 
-Built conservatively with plain PHP 8.3+, PDO, server-rendered HTML,
-and minimal vanilla JavaScript. No PHP framework, no JavaScript
-framework, no WebSockets.
+The project replaces a paper booking calendar with a simple interface that
+works well at a glance and is comfortable to use by touch. It also shows an
+outdoor drying recommendation, helping residents avoid the tumble dryer when
+the local weather is suitable.
+
+Built conservatively with plain PHP 8.3+, PDO, server-rendered HTML, and
+minimal vanilla JavaScript. No PHP framework, JavaScript framework, or
+WebSockets are required.
 
 ## Features
 
 - Shared property-code access for residents (no accounts).
 - Weekly calendar with four fixed daily slots: `07:00–10:00`,
   `10:00–13:00`, `13:00–16:00`, `16:00–19:00`.
-- Booking with a required, visible name and a mandatory privacy
-  checkbox.
-- A high-entropy, human-readable cancellation code per booking, shown
-  once and stored only as a `password_hash()`.
+- Booking with a required name that is shown on the reserved calendar slot.
+- A configurable 4–8 digit cancellation code per booking, shown once
+  and stored only as a `password_hash()`; cancellation attempts are rate-limited.
+- A postcode-based outdoor drying forecast powered by Open-Meteo, with
+  a cached fallback that never blocks the booking flow.
 - Manual 30-minute takeover rule (displayed, never enforced
   automatically).
 - Separate admin authentication with its own session, rate limiting,
@@ -25,6 +32,41 @@ framework, no WebSockets.
 - CSRF protection, prepared statements, output escaping, rate
   limiting, and secure session cookies.
 - Core booking and cancellation flows work without JavaScript.
+
+## Intended kiosk setup
+
+The resident interface is intended to stay open on a shared iPad in or near
+the laundry room. It contains no outbound links; postcode lookup and weather
+requests happen on the server, not in the resident's browser.
+
+For deployment on the shared tablet:
+
+1. Open the resident URL in Safari and add it to the Home Screen, or deploy it
+   as a web clip through mobile-device management.
+2. Use iPadOS Guided Access or Single App Mode to keep the tablet inside the
+   booking application.
+3. Disable browser password saving and notifications for the shared device.
+4. Keep admin access on a separate personal device rather than the kiosk.
+5. Configure a suitable screen-lock policy and keep the iPad connected to
+   power where appropriate.
+
+## Weather and drying recommendation
+
+The calendar converts the forecast into a short recommendation about drying
+clothes outdoors. The postcode is configurable in the admin panel and defaults
+to `1352` (København K).
+
+- Danish postcode coordinates come from Dataforsyningen.
+- Forecast data comes from Open-Meteo and requires no API key.
+- Requests are made server-side and cached for 30 minutes.
+- After 18:00, the panel shows tomorrow's drying conditions.
+- A cached response is used during short outages; otherwise the panel falls
+  back to a local laundry tip so booking remains fully functional.
+- Weather attribution is displayed as text rather than a link to prevent users
+  from leaving the kiosk application.
+
+The decorative footer artwork is loaded from
+`public/assets/laundry-footer.png`.
 
 ## Requirements
 
@@ -86,10 +128,11 @@ disposable development/test database, not production.
 
 ## Project structure
 
-See `app/`, `public/`, `scripts/`, and `tests/` for the application
-code, web-accessible entry points, operational scripts, and automated
-tests respectively. Only `public/` is meant to be exposed by the web
-server; the document root must be set to `public/`.
+See `app/`, `public/`, `scripts/`, and `tests/` for the application code,
+web-accessible entry points, operational scripts, and automated tests
+respectively. Only `public/` is meant to be exposed by the web server; the
+document root must be set to `public/`. Runtime weather responses are stored
+under `storage/cache/` and are excluded from Git.
 
 ## Admin panel
 
@@ -100,8 +143,8 @@ can:
 - View dashboard counts and system status (`/admin/index.php`).
 - Filter, search, and delete bookings (`/admin/bookings.php`).
 - Export all bookings as CSV (`/admin/export.php`).
-- Change the booking window, calendar message, and the shared
-  property code (`/admin/settings.php`).
+- Change the booking window, calendar message, weather postcode,
+  cancellation-code length, and shared property code (`/admin/settings.php`).
 - Review the activity log (`/admin/logs.php`).
 
 Do not use the shared kiosk tablet for admin access.

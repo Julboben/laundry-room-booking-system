@@ -86,6 +86,7 @@ if (Request::isPost()) {
 }
 
 $booking = $id > 0 ? $bookingService->find($id) : null;
+$codeLength = $settingsService->getCancellationCodeLength();
 
 layout_start('Aflys booking');
 ?>
@@ -119,9 +120,12 @@ layout_start('Aflys booking');
                 type="text"
                 id="cancellation_code"
                 name="cancellation_code"
-                autocapitalize="characters"
-                pattern="(\d{6}|[2-9A-HJ-NP-Z]{4}-?[2-9A-HJ-NP-Z]{4}-?[2-9A-HJ-NP-Z]{4}-?[2-9A-HJ-NP-Z]{4})"
-                maxlength="19"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                placeholder="<?= (int) $codeLength ?> cifre"
+                pattern="\d{<?= (int) $codeLength ?>}"
+                minlength="<?= (int) $codeLength ?>"
+                maxlength="<?= (int) $codeLength ?>"
                 required
             >
             <button type="submit" class="btn btn-primary">Aflys booking</button>

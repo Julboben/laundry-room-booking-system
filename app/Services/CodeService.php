@@ -5,24 +5,20 @@ declare(strict_types=1);
 namespace LaundryBooking\Services;
 
 /**
- * Cryptographically secure, human-readable cancellation tokens.
+ * Generates and verifies numeric cancellation codes using a
+ * cryptographically secure random source.
  */
 final class CodeService
 {
-    private const string ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-
-    private const int TOKEN_LENGTH = 16;
-
-    public function generateCancellationCode(): string
+    public function generateCancellationCode(int $length = 4): string
     {
-        $characters = '';
-        $maxIndex = strlen(self::ALPHABET) - 1;
-
-        for ($index = 0; $index < self::TOKEN_LENGTH; $index++) {
-            $characters .= self::ALPHABET[random_int(0, $maxIndex)];
+        if ($length < 4 || $length > 8) {
+            throw new \InvalidArgumentException('Cancellation code length must be between 4 and 8 digits.');
         }
 
-        return implode('-', str_split($characters, 4));
+        $maximum = (10 ** $length) - 1;
+
+        return str_pad((string) random_int(0, $maximum), $length, '0', STR_PAD_LEFT);
     }
 
     public function hashCode(string $code): string
@@ -37,6 +33,6 @@ final class CodeService
 
     public function normalize(string $code): string
     {
-        return strtoupper(str_replace(['-', ' '], '', trim($code)));
+        return trim($code);
     }
 }

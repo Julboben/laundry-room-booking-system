@@ -14,6 +14,7 @@ use LaundryBooking\Models\Setting;
 use LaundryBooking\Services\BookingService;
 use LaundryBooking\Services\CodeService;
 use LaundryBooking\Services\SettingsService;
+use LaundryBooking\Services\WeatherService;
 use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
@@ -60,8 +61,20 @@ $weekRange = $weekStart->format('n') === $weekEnd->format('n')
     : sprintf('%d. %s – %d. %s %s', (int) $weekStart->format('j'), $rangeStartMonth, (int) $weekEnd->format('j'), $rangeEndMonth, $weekEnd->format('Y'));
 $bookings = $bookingService->bookingsForRange($weekStart, $weekEnd);
 $slots = BookingService::slots();
-$takeoverMinutes = $settingsService->getTakeoverRuleMinutes();
 $calendarMessage = $settingsService->getCalendarMessage();
+$laundryTips = [
+    'Ryst tøjet godt, inden du hænger det op. Det giver færre folder og kortere tørretid.',
+    'Lad lågen til vaskemaskinen stå på klem efter brug, så maskinen kan tørre og holde sig frisk.',
+    'Et ekstra centrifugeringsprogram kan forkorte tørretiden for håndklæder og sengetøj.',
+    'Fyld tromlen uden at presse tøjet sammen – cirka en håndsbredde fri plads er en god tommelfingerregel.',
+    'Vend mørkt tøj på vrangen før vask. Det hjælper farven med at holde sig pæn længere.',
+    'Sortér efter både farve og materiale. Tunge håndklæder og let tøj tørrer bedst hver for sig.',
+    'Tør gerne tøjet udenfor, når vejret tillader det – frisk luft er både gratis og skånsom.',
+];
+$laundryTip = $laundryTips[(int) $today->format('z') % count($laundryTips)];
+$weatherPostcode = $settingsService->getWeatherPostcode();
+$weatherForecast = (new WeatherService(__DIR__ . '/../storage/cache'))->getDryingForecast($weatherPostcode);
+$footerImageAvailable = is_file(__DIR__ . '/assets/laundry-footer.png');
 
 layout_start('Kalender');
 ?>
@@ -91,10 +104,6 @@ layout_start('Kalender');
         <?php endif; ?>
     </div>
 
-    <div class="takeover-notice">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
-        <p>Hvis en booket tid ikke er taget i brug senest <?= (int) $takeoverMinutes ?> minutter efter starttidspunktet, må en anden beboer overtage tiden manuelt.</p>
-    </div>
     <?php if ($calendarMessage !== ''): ?>
         <p class="calendar-message"><?= e($calendarMessage) ?></p>
     <?php endif; ?>
@@ -144,19 +153,48 @@ layout_start('Kalender');
         </div>
     </div>
 
-    <aside class="resident-note">
+    <aside class="resident-note<?= $weatherForecast !== null ? ' weather-note' : '' ?><?= ($weatherForecast['isGoodDryingWeather'] ?? false) ? ' is-good-weather' : '' ?>">
         <div class="note-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48"><path d="M24 41S8 32 8 19a9 9 0 0 1 16-6 9 9 0 0 1 16 6c0 13-16 22-16 22Z"></path><path d="m18 23 4 4 8-9"></path></svg>
+            <?php if ($weatherForecast !== null && $weatherForecast['isGoodDryingWeather']): ?>
+                <svg class="weather-icon weather-icon-clear" viewBox="0 0 48 48">
+                    <circle cx="20" cy="18" r="8"></circle>
+                    <path d="M20 4v4M20 28v4M6 18h4M30 18h4M10 8l3 3M30 8l-3 3"></path>
+                    <path d="M8 37h21c4 0 4-5 0-5H18M14 42h19c4 0 4-5 0-5"></path>
+                </svg>
+            <?php elseif ($weatherForecast !== null && $weatherForecast['rainProbability'] > 40): ?>
+                <svg class="weather-icon weather-icon-rain" viewBox="0 0 48 48">
+                    <path d="M12 31h24a8 8 0 0 0 0-16c-.8 0-1.6.1-2.3.3A12 12 0 0 0 11.2 20 6 6 0 0 0 12 31Z"></path>
+                    <path d="m17 36-2 5M26 36l-2 5M35 36l-2 5"></path>
+                </svg>
+            <?php elseif ($weatherForecast !== null): ?>
+                <svg class="weather-icon weather-icon-mixed" viewBox="0 0 48 48">
+                    <circle cx="17" cy="16" r="7"></circle>
+                    <path d="M17 4v3M5 16h3M9 8l2 2M27 8l-2 2"></path>
+                    <path d="M13 38h24a8 8 0 0 0 0-16c-.8 0-1.6.1-2.3.3A12 12 0 0 0 12.2 27 6 6 0 0 0 13 38Z"></path>
+                </svg>
+            <?php else: ?>
+                <svg class="tip-icon" viewBox="0 0 48 48"><path d="M17 29c-3-2-5-6-5-10a12 12 0 0 1 24 0c0 4-2 8-5 10-2 2-2 3-2 5H19c0-2 0-3-2-5Z"></path><path d="M19 38h10M21 42h6M24 3V0M9 8 6 5M39 8l3-3"></path></svg>
+            <?php endif; ?>
         </div>
         <div class="note-copy">
-            <h2>Vigtigt at vide</h2>
-            <p>Skriv kun dit fornavn eller et navn, du er indforstået med, at andre beboere kan se.</p>
-            <p>Når du booker en tid, får du en aflysningskode. Gem den!</p>
+            <?php if ($weatherForecast !== null): ?>
+                <h2><?= $weatherForecast['isGoodDryingWeather'] ? 'Godt tørrevejr' : 'Tørrevejret' ?> <?= e($weatherForecast['period']) ?></h2>
+                <p><?= e($weatherForecast['recommendation']) ?></p>
+                <div class="weather-meta">
+                    <span><?= e($weatherForecast['location']) ?></span>
+                    <span><?= (int) $weatherForecast['temperature'] ?>&deg;C</span>
+                    <span><?= (int) $weatherForecast['rainProbability'] ?>% regn</span>
+                    <span><?= (int) $weatherForecast['windSpeed'] ?> km/t vind</span>
+                    <span>Vejrdata fra Open-Meteo</span>
+                </div>
+            <?php else: ?>
+                <h2>Dagens vasketip</h2>
+                <p><?= e($laundryTip) ?></p>
+            <?php endif; ?>
         </div>
-        <div class="note-illustration" aria-hidden="true">
-            <span class="towel-stack"></span>
-            <svg viewBox="0 0 120 100"><path d="M61 82V34M61 48C50 48 43 40 42 27c12 0 19 8 19 21ZM61 60c12 0 20-8 22-21-13-1-21 7-22 21ZM61 36c9-4 13-13 10-24-11 4-15 13-10 24ZM48 68c-10 0-18-6-21-17 11-2 19 5 21 17ZM72 70c10 0 17-6 20-17-11-1-19 5-20 17Z"></path><path d="M38 76h47l-5 20H43z"></path></svg>
-        </div>
+        <?php if ($footerImageAvailable): ?>
+            <img class="note-illustration" src="/assets/laundry-footer.png" alt="" aria-hidden="true">
+        <?php endif; ?>
     </aside>
 </section>
 <?php

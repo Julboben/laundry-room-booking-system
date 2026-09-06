@@ -160,7 +160,7 @@ final class BookingService
 
         $slot = self::slots()[$slotKey];
         $normalizedName = Validator::normalizeName($name);
-        $plainCode = $this->codeService->generateCancellationCode();
+        $plainCode = $this->codeService->generateCancellationCode($this->settings->getCancellationCodeLength());
         $codeHash = $this->codeService->hashCode($plainCode);
 
         $this->pdo->beginTransaction();
@@ -224,7 +224,10 @@ final class BookingService
         ?string $ipAddress = null,
         ?string $userAgent = null
     ): BookingCancellationResult {
-        $formatError = Validator::validateCancellationCodeFormat($code);
+        $formatError = Validator::validateCancellationCodeFormat(
+                    $code,
+                    $this->settings->getCancellationCodeLength()
+                );
         if ($formatError !== null) {
             return new BookingCancellationResult(false, error: $formatError);
         }
