@@ -29,11 +29,14 @@ if (!$residentAccess->isAuthenticated()) {
 $bookingService = new BookingService($pdo, new CodeService(), $settingsService, new ActivityLog($pdo));
 
 $today = DateHelper::today();
+$now = DateHelper::now();
 $weekParam = Request::get('week');
 $weekOffset = 0;
 
+$maxWeekOffset = $settingsService->getBookingWeeksAhead();
+
 if ($weekParam !== null && preg_match('/^-?\d+$/', $weekParam)) {
-    $weekOffset = (int) $weekParam;
+    $weekOffset = max(0, min($maxWeekOffset, (int) $weekParam));
 }
 
 $weekStart = DateHelper::startOfWeek($today)->modify(sprintf('%+d weeks', $weekOffset));
@@ -64,22 +67,28 @@ layout_start('Kalender');
 ?>
 <section class="calendar-page" aria-labelledby="week-heading">
     <div class="week-toolbar">
-        <a class="week-control week-previous" href="/calendar.php?week=<?= $weekOffset - 1 ?>">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-            <span>Forrige uge</span>
-        </a>
+        <div class="week-actions">
+            <?php if ($weekOffset > 0): ?>
+                <a class="week-control week-previous" href="/calendar.php?week=<?= $weekOffset - 1 ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                    <span>Forrige uge</span>
+                </a>
+                <a class="week-control week-today" href="/calendar.php?week=0">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z"></path><path d="M8 13h3v3H8z"></path></svg>
+                    <span>I dag</span>
+                </a>
+            <?php endif; ?>
+        </div>
         <div class="week-title">
             <h2 id="week-heading">Uge <?= $weekNumber ?></h2>
             <p><?= e($weekRange) ?></p>
         </div>
-        <a class="week-control week-today" href="/calendar.php?week=0">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z"></path><path d="M8 13h3v3H8z"></path></svg>
-            <span>I dag</span>
-        </a>
-        <a class="week-control week-next" href="/calendar.php?week=<?= $weekOffset + 1 ?>">
-            <span>Næste uge</span>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-        </a>
+        <?php if ($weekOffset < $maxWeekOffset): ?>
+            <a class="week-control week-next" href="/calendar.php?week=<?= $weekOffset + 1 ?>">
+                <span>Næste uge</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+            </a>
+        <?php endif; ?>
     </div>
 
     <div class="takeover-notice">
@@ -99,11 +108,14 @@ layout_start('Kalender');
             <div class="calendar-row" role="row">
                 <div class="calendar-corner" role="columnheader"><span>Tid</span></div>
                 <?php foreach ($days as $day): ?>
-                    <?php $isToday = $day->format('Y-m-d') === $today->format('Y-m-d'); ?>
-                    <div class="calendar-day-heading<?= $isToday ? ' is-today' : '' ?>" role="columnheader">
+                    <?php
+                    $isToday = $day->format('Y-m-d') === $today->format('Y-m-d');
+                    $isPastDay = $day < $today;
+                    ?>
+                    <div class="calendar-day-heading<?= $isToday ? ' is-today' : '' ?><?= $isPastDay ? ' is-past' : '' ?>" role="columnheader">
                         <span class="day-name"><?= e(ucfirst(explode(' ', danish_date_short($day))[0])) ?></span>
                         <span class="day-date"><?= e($day->format('j/n')) ?></span>
-                        <?php if ($isToday): ?><span class="today-dot" aria-label="I dag"></span><?php endif; ?>
+                        <?php if ($isToday): ?><span class="today-label">I dag</span><?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -120,6 +132,7 @@ layout_start('Kalender');
                         $dateString = $day->format('Y-m-d');
                         $booking = $bookings[$dateString . '|' . $slotKey] ?? null;
                         $date = $dateString;
+                        $isPast = DateHelper::fromDateString($dateString . ' ' . $slot['start']) <= $now;
                         ?>
                         <div class="calendar-cell" role="cell" style="--delay: <?= 110 + ($rowIndex * 70) ?>ms">
                             <?php include __DIR__ . '/../app/View/partials/slot_card.php'; ?>
