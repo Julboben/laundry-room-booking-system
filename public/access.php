@@ -43,9 +43,9 @@ if (Request::isPost()) {
     }
 }
 
-layout_start('Adgang', showNav: false);
+layout_start('Adgang', showNav: false, bodyClass: 'page-kiosk page-access');
 ?>
-<section class="card">
+<section class="card kiosk-card access-card">
     <h2>Ejendomskode</h2>
     <p>Indtast ejendommens fælles adgangskode for at se og booke tider i vaskekalenderen.</p>
     <?php if ($error !== null): ?>

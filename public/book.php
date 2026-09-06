@@ -73,9 +73,9 @@ $slots = BookingService::slots();
 $slot = $slots[$slotKey] ?? null;
 $takeoverMinutes = $settingsService->getTakeoverRuleMinutes();
 
-layout_start('Bekræft booking');
+layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking');
 ?>
-<section class="card booking-card">
+<section class="card kiosk-card booking-card">
     <h2>Bekræft din tid</h2>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
@@ -124,7 +124,7 @@ layout_start('Bekræft booking');
             </div>
 
             <button type="submit" class="btn btn-primary">Bekræft booking</button>
-            <a class="btn btn-secondary" href="/calendar.php">Tilbage</a>
+            <a class="btn btn-secondary" href="/calendar.php?date=<?= e($date) ?>">Tilbage</a>
         </form>
     <?php else: ?>
         <p><a class="btn btn-secondary" href="/calendar.php">Tilbage</a></p>

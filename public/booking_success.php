@@ -43,9 +43,9 @@ if ($booking === false) {
     Response::redirect('/calendar.php');
 }
 
-layout_start('Booking oprettet');
+layout_start('Booking oprettet', bodyClass: 'page-kiosk page-success');
 ?>
-<section class="card">
+<section class="card kiosk-card success-card">
     <h2>Din booking er oprettet.</h2>
     <p>
         <?= e(danish_date_long(DateHelper::fromDateString($booking['booking_date']))) ?>,
@@ -62,7 +62,7 @@ layout_start('Booking oprettet');
         Gem denne aflysningskode. Du skal bruge den, hvis du vil aflyse bookingen.
     </p>
 
-    <p><a class="btn btn-primary" href="/calendar.php">Tilbage til kalenderen</a></p>
+    <p><a class="btn btn-primary" href="/calendar.php?date=<?= e($booking['booking_date']) ?>">Tilbage til kalenderen</a></p>
 </section>
 <?php
 layout_end();

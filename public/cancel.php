@@ -35,6 +35,10 @@ const MAX_CANCEL_BOOKING_ATTEMPTS = 25;
 const CANCEL_LOCKOUT_SECONDS = 300;
 
 $id = (int) (Request::get('id') ?? Request::post('id') ?? '0');
+$returnDate = Request::get('date') ?? Request::post('return_date') ?? '';
+$calendarUrl = DateHelper::isValidDateString($returnDate)
+    ? '/calendar.php?date=' . rawurlencode($returnDate)
+    : '/calendar.php';
 $error = null;
 $cancelled = false;
 
@@ -88,17 +92,17 @@ if (Request::isPost()) {
 $booking = $id > 0 ? $bookingService->find($id) : null;
 $codeLength = $settingsService->getCancellationCodeLength();
 
-layout_start('Aflys booking');
+layout_start('Aflys booking', bodyClass: 'page-kiosk page-cancel');
 ?>
-<section class="card">
+<section class="card kiosk-card cancel-card">
     <h2>Aflys booking</h2>
 
     <?php if ($cancelled): ?>
         <p class="alert alert-success" role="status">Bookingen er blevet fjernet.</p>
-        <p><a class="btn btn-primary" href="/calendar.php">Tilbage til kalenderen</a></p>
+        <p><a class="btn btn-primary" href="<?= e($calendarUrl) ?>">Tilbage til kalenderen</a></p>
     <?php elseif ($booking === null): ?>
         <p class="alert alert-error" role="alert">Bookingen findes ikke.</p>
-        <p><a class="btn btn-secondary" href="/calendar.php">Tilbage</a></p>
+        <p><a class="btn btn-secondary" href="<?= e($calendarUrl) ?>">Tilbage</a></p>
     <?php else: ?>
         <?php if ($error !== null): ?>
             <p class="alert alert-error" role="alert"><?= e($error) ?></p>
@@ -115,6 +119,7 @@ layout_start('Aflys booking');
         <form method="post" action="/cancel.php?id=<?= (int) $id ?>" novalidate>
             <?= Csrf::field() ?>
             <input type="hidden" name="id" value="<?= (int) $id ?>">
+            <input type="hidden" name="return_date" value="<?= e($returnDate) ?>">
             <label for="cancellation_code">Aflysningskode</label>
             <input
                 type="text"
@@ -129,7 +134,7 @@ layout_start('Aflys booking');
                 required
             >
             <button type="submit" class="btn btn-primary">Aflys booking</button>
-            <a class="btn btn-secondary" href="/calendar.php">Tilbage</a>
+            <a class="btn btn-secondary" href="<?= e($calendarUrl) ?>">Tilbage</a>
         </form>
     <?php endif; ?>
 </section>

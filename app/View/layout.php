@@ -9,7 +9,7 @@ require_once __DIR__ . '/helpers.php';
 /**
  * Renders the opening HTML shell shared by all resident-facing pages.
  */
-function layout_start(string $title, bool $showNav = true): void
+function layout_start(string $title, bool $showNav = true, string $bodyClass = ''): void
 {
     ?><!DOCTYPE html>
 <html lang="da">
@@ -18,9 +18,15 @@ function layout_start(string $title, bool $showNav = true): void
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> – Vaskekalender</title>
     <link rel="stylesheet" href="/assets/app.css">
+<?php if (str_contains($bodyClass, 'page-kiosk')): ?>
+    <link rel="stylesheet" href="/assets/kiosk.css">
+<?php endif; ?>
+<?php if (str_contains($bodyClass, 'page-calendar')): ?>
+    <link rel="stylesheet" href="/assets/calendar.css">
+<?php endif; ?>
     <script src="/assets/app.js" defer></script>
 </head>
-<body>
+<body class="<?= e($bodyClass) ?>">
 <header class="site-header">
     <div class="header-inner">
         <a class="brand" href="/calendar.php" aria-label="Vaskekalender – gå til kalenderen">
@@ -43,11 +49,11 @@ function layout_start(string $title, bool $showNav = true): void
         <nav class="site-nav" aria-label="Primær navigation">
             <a class="nav-calendar" href="/calendar.php">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v3M18 2v3M3 9h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path></svg>
-                Kalender
+                <span>Kalender</span>
             </a>
             <a class="nav-logout" href="/logout.php">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"></path></svg>
-                Log ud
+                <span>Log ud</span>
             </a>
         </nav>
 <?php endif; ?>
@@ -74,9 +80,6 @@ function layout_end(): void
 {
     ?>
 </main>
-<footer class="site-footer">
-    <p>Vaskekalender &middot; Kun til intern brug for ejendommens beboere</p>
-</footer>
 </body>
 </html>
 <?php

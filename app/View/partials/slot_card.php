@@ -29,7 +29,10 @@ $isPast = $isPast ?? false;
                 </span>
                 <span class="slot-name"><?= e($booking->bookingName) ?></span>
             </div>
-            <a class="btn btn-cancel" href="/cancel.php?id=<?= (int) $booking->id ?>">Aflys booking</a>
+            <span class="btn btn-cancel slot-action">
+                Aflys booking
+                <svg class="slot-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+            </span>
         <?php else: ?>
             <div class="slot-label">
                 <span class="slot-icon" aria-hidden="true">
@@ -37,7 +40,10 @@ $isPast = $isPast ?? false;
                 </span>
                 <span class="slot-name">Ledig</span>
             </div>
-            <a class="btn btn-book" href="/book.php?date=<?= e($date) ?>&amp;slot=<?= e($slotKey) ?>">Book tid</a>
+            <span class="btn btn-book slot-action">
+                Book tid
+                <svg class="slot-action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+            </span>
         <?php endif; ?>
     </div>
 </div>

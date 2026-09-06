@@ -1,0 +1,280 @@
+/* Shared full-screen shell for resident-facing kiosk pages. */
+body.page-kiosk {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+.page-kiosk .site-header {
+    flex: 0 0 96px;
+}
+
+.page-kiosk .header-inner {
+    width: min(100% - 36px, 1180px);
+    min-height: 96px;
+}
+
+.page-kiosk .brand {
+    gap: 15px;
+}
+
+.page-kiosk .brand-mark {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+}
+
+.page-kiosk .brand-mark svg {
+    width: 35px;
+    height: 35px;
+}
+
+.page-kiosk .brand-title {
+    font-size: clamp(1.45rem, 3vw, 1.9rem);
+}
+
+.page-kiosk .brand-subtitle {
+    font-size: 0.92rem;
+}
+
+.page-kiosk .site-nav a {
+    min-height: 48px;
+}
+
+.page-kiosk .site-main {
+    width: min(100% - 36px, 1180px);
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: 18px 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+}
+
+.page-kiosk .kiosk-card {
+    width: min(100%, 760px);
+    max-height: 100%;
+    margin: 0;
+    padding: clamp(24px, 4vh, 42px);
+    overflow: hidden;
+    border-color: #d8e1d8;
+    border-radius: 24px;
+    box-shadow: 0 18px 48px rgba(28, 50, 39, 0.09);
+}
+
+.page-kiosk .kiosk-card h2 {
+    font-size: clamp(1.65rem, 4vw, 2.25rem);
+}
+
+.page-kiosk .kiosk-card > p {
+    color: var(--ink-soft);
+}
+
+.page-kiosk .kiosk-card form {
+    max-width: none;
+}
+
+.page-kiosk .kiosk-card input[type="text"],
+.page-kiosk .kiosk-card input[type="password"] {
+    min-height: 58px;
+    padding: 12px 16px;
+    border-radius: 13px;
+    font-size: 1.08rem;
+}
+
+.page-kiosk .kiosk-card .btn {
+    min-height: 54px;
+    padding-inline: 26px;
+    border-radius: 13px;
+}
+
+.page-access .header-inner {
+    justify-content: center;
+}
+
+.access-card {
+    max-width: 610px !important;
+    text-align: center;
+}
+
+.access-card form {
+    margin-inline: auto;
+    text-align: left;
+}
+
+.access-card .btn {
+    width: 100%;
+    margin-top: 24px;
+}
+
+.booking-card .booking-summary {
+    margin: 18px 0 20px;
+}
+
+.booking-card .booking-notes {
+    margin-top: 20px;
+}
+
+.success-card {
+    max-width: 680px !important;
+    text-align: center;
+}
+
+.success-card > p,
+.success-card .cancellation-code {
+    margin-inline: auto;
+}
+
+.success-card .cancellation-code {
+    padding: 16px;
+    border: 1px solid #cfddce;
+    border-radius: 16px;
+    background: #f3f7f0;
+}
+
+.success-card .cancellation-code p {
+    margin: 0 0 8px;
+}
+
+.success-card .cancellation-code .code {
+    margin: 0;
+    border: 0;
+    background: transparent;
+}
+
+.cancel-card {
+    max-width: 680px !important;
+}
+
+.cancel-card form {
+    margin-top: 20px;
+}
+
+@media (max-width: 699px) {
+    .page-kiosk:not(.page-calendar) .site-header {
+        flex-basis: 74px;
+    }
+
+    .page-kiosk:not(.page-calendar) .header-inner {
+        width: calc(100% - 20px);
+        min-height: 74px;
+    }
+
+    .page-kiosk:not(.page-calendar) .brand-mark {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+
+    .page-kiosk:not(.page-calendar) .brand-mark svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .page-kiosk:not(.page-calendar) .brand-title {
+        font-size: 1.18rem;
+    }
+
+    .page-kiosk:not(.page-calendar) .site-nav .nav-calendar {
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .page-kiosk:not(.page-calendar) .site-nav .nav-calendar span {
+        display: none;
+    }
+
+    .page-kiosk:not(.page-calendar) .site-nav .nav-logout {
+        display: none;
+    }
+
+    .page-kiosk:not(.page-calendar) .site-main {
+        width: calc(100% - 18px);
+        padding: 10px 0;
+    }
+
+    .page-kiosk .kiosk-card {
+        padding: 20px 17px;
+        border-radius: 18px;
+    }
+
+    .page-kiosk .kiosk-card h2 {
+        font-size: 1.55rem;
+    }
+
+    .page-kiosk .kiosk-card input[type="text"],
+    .page-kiosk .kiosk-card input[type="password"] {
+        min-height: 52px;
+        font-size: 1rem;
+    }
+
+    .page-kiosk .kiosk-card .btn {
+        min-height: 50px;
+        margin-top: 14px;
+    }
+
+    .booking-card .booking-summary {
+        margin: 12px 0 14px;
+        padding: 12px;
+    }
+
+    .booking-card label {
+        margin-top: 12px;
+    }
+
+    .booking-card .booking-notes {
+        margin-top: 14px;
+        padding: 13px;
+    }
+
+    .booking-card .booking-notes li {
+        font-size: 0.78rem;
+    }
+
+    .success-card .cancellation-code {
+        padding: 10px;
+    }
+}
+
+@media (max-height: 700px) {
+    .page-kiosk:not(.page-calendar) .site-header {
+        flex-basis: 66px;
+    }
+
+    .page-kiosk:not(.page-calendar) .header-inner {
+        min-height: 66px;
+    }
+
+    .page-kiosk:not(.page-calendar) .site-main {
+        padding: 7px 0;
+    }
+
+    .page-kiosk .kiosk-card {
+        padding-block: 16px;
+    }
+
+    .page-kiosk .kiosk-card h2 {
+        margin-bottom: 4px;
+        font-size: 1.4rem;
+    }
+
+    .page-kiosk .kiosk-card p {
+        margin-block: 7px;
+    }
+
+    .booking-card .booking-summary,
+    .booking-card .booking-notes {
+        margin-block: 10px;
+    }
+
+    .page-kiosk .kiosk-card .btn {
+        min-height: 46px;
+        margin-top: 9px;
+    }
+}

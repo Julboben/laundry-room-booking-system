@@ -17,8 +17,11 @@ WebSockets are required.
 ## Features
 
 - Shared property-code access for residents (no accounts).
-- Weekly calendar with four fixed daily slots: `07:00–10:00`,
-  `10:00–13:00`, `13:00–16:00`, `16:00–19:00`.
+- Touch-first single-day calendar with previous/next controls, an in-app date
+  picker that previews remaining availability, and four fixed slots:
+  `07:00–10:00`, `10:00–13:00`, `13:00–16:00`, `16:00–19:00`.
+- After the final slot begins, the resident calendar automatically starts on
+  the following day.
 - Booking with a required name that is shown on the reserved calendar slot.
 - A configurable 4–8 digit cancellation code per booking, shown once
   and stored only as a `password_hash()`; cancellation attempts are rate-limited.
@@ -36,8 +39,11 @@ WebSockets are required.
 ## Intended kiosk setup
 
 The resident interface is intended to stay open on a shared iPad in or near
-the laundry room. It contains no outbound links; postcode lookup and weather
-requests happen on the server, not in the resident's browser.
+the laundry room. The calendar, access, booking, confirmation, and cancellation
+screens use a full-screen kiosk layout sized for phone and iPad viewports without
+page or timetable scrolling. The resident flow contains no outbound links;
+postcode lookup and weather requests happen on the server, not in the
+resident's browser.
 
 For deployment on the shared tablet:
 
