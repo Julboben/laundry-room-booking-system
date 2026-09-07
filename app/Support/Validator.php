@@ -52,15 +52,15 @@ final class Validator
         $trimmed = trim($name);
 
         if ($trimmed === '') {
-            return 'Skriv et navn.';
+            return I18n::translate('Skriv et navn.');
         }
 
         if (mb_strlen($trimmed) < 2) {
-            return 'Navnet er for kort.';
+            return I18n::translate('Navnet er for kort.');
         }
 
         if (mb_strlen($trimmed) > 100) {
-            return 'Navnet må højst være 100 tegn.';
+            return I18n::translate('Navnet må højst være 100 tegn.');
         }
 
         return null;
@@ -74,11 +74,11 @@ final class Validator
     public static function validateCancellationCodeFormat(string $code, int $length = 4): ?string
     {
         if (trim($code) === '') {
-            return 'Skriv aflysningskoden.';
+            return I18n::translate('Skriv aflysningskoden.');
         }
 
         if (preg_match('/^\d{' . $length . '}$/', trim($code)) !== 1) {
-            return sprintf('Aflysningskoden skal bestå af %d cifre.', $length);
+            return I18n::translate('Aflysningskoden skal bestå af %d cifre.', $length);
         }
 
         return null;
@@ -87,7 +87,7 @@ final class Validator
     public static function validateSlotKey(string $slotKey): ?string
     {
         if (!array_key_exists($slotKey, \LaundryBooking\Services\BookingService::slots())) {
-            return 'Tiden er ikke gyldig.';
+            return I18n::translate('Tiden er ikke gyldig.');
         }
 
         return null;
@@ -96,7 +96,7 @@ final class Validator
     public static function validateDateFormat(string $date): ?string
     {
         if (!DateHelper::isValidDateString($date)) {
-            return 'Datoen er ikke gyldig.';
+            return I18n::translate('Datoen er ikke gyldig.');
         }
 
         return null;

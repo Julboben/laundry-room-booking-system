@@ -18,6 +18,7 @@ use LaundryBooking\Services\SettingsService;
 use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -40,7 +41,7 @@ if (Request::isPost()) {
     $name = Request::post('booking_name', '') ?? '';
 
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = 'Sikkerhedstjek fejlede. Prøv igen.';
+        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
     } else {
         $result = $bookingService->create(
             $date,
@@ -58,14 +59,14 @@ if (Request::isPost()) {
             Response::redirect('/booking_success.php?id=' . $result->bookingId);
         }
 
-        $error = $result->error;
+        $error = t($result->error);
     }
 } else {
     $dateSlotError = $bookingService->validateDateAndSlot($date, $slotKey);
     if ($dateSlotError !== null) {
-        $error = $dateSlotError;
+        $error = t($dateSlotError);
     } elseif (!$bookingService->isAvailable($date, $slotKey)) {
-        $error = 'Tiden er desværre allerede booket.';
+        $error = t('Tiden er desværre allerede booket.');
     }
 }
 
@@ -76,7 +77,7 @@ $takeoverMinutes = $settingsService->getTakeoverRuleMinutes();
 layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking');
 ?>
 <section class="card kiosk-card booking-card">
-    <h2>Bekræft din tid</h2>
+    <h2><?= e(t('Bekræft din tid')) ?></h2>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
     <?php endif; ?>
@@ -96,7 +97,7 @@ layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking');
             <input type="hidden" name="date" value="<?= e($date) ?>">
             <input type="hidden" name="slot" value="<?= e($slotKey) ?>">
 
-            <label for="booking_name">Dit navn</label>
+            <label for="booking_name"><?= e(t('Dit navn')) ?></label>
             <input
                 type="text"
                 id="booking_name"
@@ -107,27 +108,27 @@ layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking');
                 aria-describedby="name-help"
                 required
             >
-            <small class="form-hint" id="name-help">Navnet vises på den bookede tid.</small>
+            <small class="form-hint" id="name-help"><?= e(t('Navnet vises på den bookede tid.')) ?></small>
 
             <div class="booking-notes">
-                <h3>Godt at vide</h3>
+                <h3><?= e(t('Godt at vide')) ?></h3>
                 <ul>
                     <li>
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-                        <span>Er tiden ikke taget i brug senest <?= (int) $takeoverMinutes ?> minutter efter start, må en anden beboer overtage den.</span>
+                        <span><?= e(t('Er tiden ikke taget i brug senest %d minutter efter start, må en anden beboer overtage den.', $takeoverMinutes)) ?></span>
                     </li>
                     <li>
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="m11 12 8-8M16 7l3 3"></path></svg>
-                        <span>Efter bookingen får du en aflysningskode. Gem den, hvis du får brug for at aflyse.</span>
+                        <span><?= e(t('Efter bookingen får du en aflysningskode. Gem den, hvis du får brug for at aflyse.')) ?></span>
                     </li>
                 </ul>
             </div>
 
-            <button type="submit" class="btn btn-primary">Bekræft booking</button>
-            <a class="btn btn-secondary" href="/calendar.php?date=<?= e($date) ?>">Tilbage</a>
+            <button type="submit" class="btn btn-primary"><?= e(t('Bekræft booking')) ?></button>
+            <a class="btn btn-secondary" href="/calendar.php?date=<?= e($date) ?>"><?= e(t('Tilbage')) ?></a>
         </form>
     <?php else: ?>
-        <p><a class="btn btn-secondary" href="/calendar.php">Tilbage</a></p>
+        <p><a class="btn btn-secondary" href="/calendar.php"><?= e(t('Tilbage')) ?></a></p>
     <?php endif; ?>
 </section>
 <?php

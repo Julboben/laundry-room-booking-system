@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 /**
  * Renders a single slot card for the calendar. Expects variables:
@@ -14,7 +15,9 @@ $isPast = $isPast ?? false;
 [$startHour, $startMinute] = array_map('intval', explode(':', $slot['start']));
 [$endHour, $endMinute] = array_map('intval', explode(':', $slot['end']));
 $durationMinutes = (($endHour * 60) + $endMinute) - (($startHour * 60) + $startMinute);
-$durationLabel = $durationMinutes === 60 ? '1 time' : (int) ($durationMinutes / 60) . ' timer';
+$durationLabel = $durationMinutes === 60
+    ? t('1 time')
+    : t('%d timer', (int) ($durationMinutes / 60));
 ?>
 <div class="slot-card <?= $isPast ? 'slot-past' : ($isBooked ? 'slot-booked' : 'slot-available') ?>">
     <div class="slot-status">
@@ -24,10 +27,10 @@ $durationLabel = $durationMinutes === 60 ? '1 time' : (int) ($durationMinutes / 
                     <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"></circle><path d="m11.5 16 3 3 6.5-7"></path></svg>
                 </span>
                 <span class="slot-copy">
-                    <span class="slot-name">Passeret</span>
+                    <span class="slot-name"><?= e(t('Passeret')) ?></span>
                 </span>
             </span>
-            <span class="slot-unavailable">Kan ikke bookes</span>
+            <span class="slot-unavailable"><?= e(t('Kan ikke bookes')) ?></span>
             <span class="slot-duration is-placeholder" aria-hidden="true"><?= e($durationLabel) ?></span>
         <?php elseif ($isBooked): ?>
             <span class="slot-content">
@@ -36,10 +39,10 @@ $durationLabel = $durationMinutes === 60 ? '1 time' : (int) ($durationMinutes / 
                 </span>
                 <span class="slot-copy">
                     <span class="slot-name"><?= e($booking->bookingName) ?></span>
-                    <span class="slot-badge">Optaget</span>
+                    <span class="slot-badge"><?= e(t('Optaget')) ?></span>
                 </span>
             </span>
-            <span class="btn btn-cancel slot-action">Aflys booking</span>
+            <span class="btn btn-cancel slot-action"><?= e(t('Aflys booking')) ?></span>
             <span class="slot-duration is-placeholder" aria-hidden="true"><?= e($durationLabel) ?></span>
         <?php else: ?>
             <span class="slot-content">
@@ -47,10 +50,10 @@ $durationLabel = $durationMinutes === 60 ? '1 time' : (int) ($durationMinutes / 
                     <svg viewBox="0 0 32 32"><path d="M9 4v4M23 4v4M5 11h22M8 6h16a3 3 0 0 1 3 3v18H5V9a3 3 0 0 1 3-3Z"></path><path d="m11 19 3 3 7-7"></path></svg>
                 </span>
                 <span class="slot-copy">
-                    <span class="slot-name">Ledig</span>
+                    <span class="slot-name"><?= e(t('Ledig')) ?></span>
                 </span>
             </span>
-            <span class="btn btn-book slot-action">Book tid</span>
+            <span class="btn btn-book slot-action"><?= e(t('Book tid')) ?></span>
             <span class="slot-duration">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg>
                 <?= e($durationLabel) ?>

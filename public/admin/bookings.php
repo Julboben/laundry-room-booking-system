@@ -14,6 +14,7 @@ use LaundryBooking\Models\ActivityLog;
 use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $adminAuth = new AdminAuth();
 
@@ -36,7 +37,7 @@ $success = null;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = 'Sikkerhedstjek fejlede. Prøv igen.';
+        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
     } else {
         $deleteId = (int) (Request::post('delete_id') ?? '0');
 
@@ -49,7 +50,7 @@ if (Request::isPost()) {
 
                 if ($statement->rowCount() === 0) {
                     $pdo->rollBack();
-                    $error = 'Bookingen findes ikke.';
+                    $error = t('Bookingen findes ikke.');
                 } else {
                     $activityLog->log(
                         actorType: 'admin',
@@ -60,7 +61,7 @@ if (Request::isPost()) {
                         details: 'Deleted by ' . ($adminAuth->currentUsername() ?? 'unknown')
                     );
                     $pdo->commit();
-                    $success = 'Bookingen er slettet.';
+                    $success = t('Bookingen er slettet.');
                 }
             } catch (\Throwable $exception) {
                 if ($pdo->inTransaction()) {
@@ -109,8 +110,8 @@ $bookings = $statement->fetchAll();
 layout_start('Bookinger');
 ?>
 <section class="card">
-    <h2>Bookinger</h2>
-    <p><a href="/admin/index.php">&laquo; Tilbage til administration</a></p>
+    <h2><?= e(t('Bookinger')) ?></h2>
+    <p><a href="/admin/index.php"><?= e(t('« Tilbage til administration')) ?></a></p>
 
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
@@ -120,26 +121,26 @@ layout_start('Bookinger');
     <?php endif; ?>
 
     <form method="get" action="/admin/bookings.php" class="filter-form">
-        <label for="date_from">Fra dato</label>
+        <label for="date_from"><?= e(t('Fra dato')) ?></label>
         <input type="date" id="date_from" name="date_from" value="<?= e($dateFrom) ?>">
 
-        <label for="date_to">Til dato</label>
+        <label for="date_to"><?= e(t('Til dato')) ?></label>
         <input type="date" id="date_to" name="date_to" value="<?= e($dateTo) ?>">
 
-        <label for="search">Søg navn</label>
+        <label for="search"><?= e(t('Søg navn')) ?></label>
         <input type="text" id="search" name="search" value="<?= e($search) ?>">
 
-        <button type="submit" class="btn btn-secondary">Filtrer</button>
+        <button type="submit" class="btn btn-secondary"><?= e(t('Filtrer')) ?></button>
     </form>
 
     <table class="bookings-table">
         <thead>
         <tr>
-            <th>Dato</th>
-            <th>Tid</th>
-            <th>Navn</th>
-            <th>Oprettet</th>
-            <th>Handling</th>
+            <th><?= e(t('Dato')) ?></th>
+            <th><?= e(t('Tid')) ?></th>
+            <th><?= e(t('Navn')) ?></th>
+            <th><?= e(t('Oprettet')) ?></th>
+            <th><?= e(t('Handling')) ?></th>
         </tr>
         </thead>
         <tbody>
@@ -150,16 +151,16 @@ layout_start('Bookinger');
                 <td><?= e($booking['booking_name']) ?></td>
                 <td><?= e($booking['created_at']) ?></td>
                 <td>
-                    <form method="post" action="/admin/bookings.php" data-confirm="Slet denne booking?">
+                    <form method="post" action="/admin/bookings.php" data-confirm="<?= e(t('Slet denne booking?')) ?>">
                         <?= Csrf::field() ?>
                         <input type="hidden" name="delete_id" value="<?= (int) $booking['id'] ?>">
-                        <button type="submit" class="btn btn-danger">Slet</button>
+                        <button type="submit" class="btn btn-danger"><?= e(t('Slet')) ?></button>
                     </form>
                 </td>
             </tr>
         <?php endforeach; ?>
         <?php if ($bookings === []): ?>
-            <tr><td colspan="5">Ingen bookinger fundet.</td></tr>
+            <tr><td colspan="5"><?= e(t('Ingen bookinger fundet.')) ?></td></tr>
         <?php endif; ?>
         </tbody>
     </table>

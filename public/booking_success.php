@@ -15,6 +15,7 @@ use LaundryBooking\Services\SettingsService;
 use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -46,23 +47,23 @@ if ($booking === false) {
 layout_start('Booking oprettet', bodyClass: 'page-kiosk page-success');
 ?>
 <section class="card kiosk-card success-card">
-    <h2>Din booking er oprettet.</h2>
+    <h2><?= e(t('Din booking er oprettet.')) ?></h2>
     <p>
         <?= e(danish_date_long(DateHelper::fromDateString($booking['booking_date']))) ?>,
         <?= e(substr($booking['start_time'], 0, 5)) ?>&ndash;<?= e(substr($booking['end_time'], 0, 5)) ?>
     </p>
-    <p>Navn: <?= e($booking['booking_name']) ?></p>
+    <p><?= e(t('Navn:')) ?> <?= e($booking['booking_name']) ?></p>
 
     <div class="cancellation-code">
-        <p>Din aflysningskode:</p>
+        <p><?= e(t('Din aflysningskode:')) ?></p>
         <p class="code"><?= e($sessionData['code']) ?></p>
     </div>
 
     <p class="alert alert-warning">
-        Gem denne aflysningskode. Du skal bruge den, hvis du vil aflyse bookingen.
+        <?= e(t('Gem denne aflysningskode. Du skal bruge den, hvis du vil aflyse bookingen.')) ?>
     </p>
 
-    <p><a class="btn btn-primary" href="/calendar.php?date=<?= e($booking['booking_date']) ?>">Tilbage til kalenderen</a></p>
+    <p><a class="btn btn-primary" href="/calendar.php?date=<?= e($booking['booking_date']) ?>"><?= e(t('Tilbage til kalenderen')) ?></a></p>
 </section>
 <?php
 layout_end();

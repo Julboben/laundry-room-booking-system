@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LaundryBooking\Services;
 
 use LaundryBooking\Support\DateHelper;
+use LaundryBooking\Support\I18n;
 
 /**
  * Fetches and caches a simple outdoor drying forecast.
@@ -43,18 +44,18 @@ final class WeatherService
         $cached = $this->readCache($cacheFile);
 
         if ($cached !== null && $cached['cachedAt'] >= time() - self::CACHE_TTL_SECONDS) {
-            return $cached['forecast'];
+            return $this->localizeForecast($cached['forecast']);
         }
 
         $forecast = $this->fetchForecast($postcode);
 
         if ($forecast !== null) {
             $this->writeCache($cacheFile, $forecast);
-            return $forecast;
+            return $this->localizeForecast($forecast);
         }
 
         if ($cached !== null && $cached['cachedAt'] >= time() - self::STALE_CACHE_TTL_SECONDS) {
-            return $cached['forecast'];
+            return $this->localizeForecast($cached['forecast']);
         }
 
         return null;
@@ -147,6 +148,20 @@ final class WeatherService
                 $windSpeed
             ),
         ];
+    }
+
+    /** @param array<string,mixed> $forecast */
+    private function localizeForecast(array $forecast): array
+    {
+        if (is_string($forecast['period'] ?? null)) {
+            $forecast['period'] = I18n::translate($forecast['period']);
+        }
+
+        if (is_string($forecast['recommendation'] ?? null)) {
+            $forecast['recommendation'] = I18n::translate($forecast['recommendation']);
+        }
+
+        return $forecast;
     }
 
     private function recommendation(

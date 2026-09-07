@@ -15,6 +15,7 @@ use LaundryBooking\Security\RateLimiter;
 use LaundryBooking\Services\SettingsService;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -28,10 +29,10 @@ $error = null;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = 'Sikkerhedstjek fejlede. Prøv igen.';
+        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
     } elseif ($residentAccess->isLockedOut()) {
         $minutes = (int) ceil($residentAccess->lockoutRemainingSeconds() / 60);
-        $error = "For mange forsøg. Prøv igen om ca. {$minutes} minutter.";
+        $error = t('For mange forsøg. Prøv igen om ca. %d minutter.', $minutes);
     } else {
         $code = Request::post('property_code', '') ?? '';
 
@@ -39,21 +40,21 @@ if (Request::isPost()) {
             Response::redirect('/calendar.php');
         }
 
-        $error = 'Koden er ikke korrekt. Prøv igen.';
+        $error = t('Koden er ikke korrekt. Prøv igen.');
     }
 }
 
 layout_start('Adgang', showNav: false, bodyClass: 'page-kiosk page-access');
 ?>
 <section class="card kiosk-card access-card">
-    <h2>Ejendomskode</h2>
-    <p>Indtast ejendommens fælles adgangskode for at se og booke tider i vaskekalenderen.</p>
+    <h2><?= e(t('Ejendomskode')) ?></h2>
+    <p><?= e(t('Indtast ejendommens fælles adgangskode for at se og booke tider i vaskekalenderen.')) ?></p>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
     <?php endif; ?>
     <form method="post" action="/access.php" novalidate>
         <?= Csrf::field() ?>
-        <label for="property_code">Ejendomskode</label>
+        <label for="property_code"><?= e(t('Ejendomskode')) ?></label>
         <input
             type="password"
             id="property_code"
@@ -62,7 +63,7 @@ layout_start('Adgang', showNav: false, bodyClass: 'page-kiosk page-access');
             inputmode="numeric"
             required
         >
-        <button type="submit" class="btn btn-primary">Gem</button>
+        <button type="submit" class="btn btn-primary"><?= e(t('Gem')) ?></button>
     </form>
 </section>
 <?php

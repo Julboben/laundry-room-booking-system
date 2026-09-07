@@ -13,6 +13,7 @@ use LaundryBooking\Database\Connection;
 use LaundryBooking\Security\RateLimiter;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $adminAuth = new AdminAuth(new RateLimiter(Connection::get()), Request::ip());
 
@@ -24,10 +25,10 @@ $error = null;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = 'Sikkerhedstjek fejlede. Prøv igen.';
+        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
     } elseif ($adminAuth->isLockedOut()) {
         $minutes = (int) ceil($adminAuth->lockoutRemainingSeconds() / 60);
-        $error = "For mange forsøg. Prøv igen om ca. {$minutes} minutter.";
+        $error = t('For mange forsøg. Prøv igen om ca. %d minutter.', $minutes);
     } else {
         $username = Request::post('username', '') ?? '';
         $password = Request::post('password', '') ?? '';
@@ -36,26 +37,26 @@ if (Request::isPost()) {
             Response::redirect('/admin/index.php');
         }
 
-        $error = 'Forkert brugernavn eller adgangskode.';
+        $error = t('Forkert brugernavn eller adgangskode.');
     }
 }
 
 layout_start('Administrator login', showNav: false);
 ?>
 <section class="card">
-    <h2>Administrator login</h2>
+    <h2><?= e(t('Administrator login')) ?></h2>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
     <?php endif; ?>
     <form method="post" action="/admin/login.php" novalidate>
         <?= Csrf::field() ?>
-        <label for="username">Brugernavn</label>
+        <label for="username"><?= e(t('Brugernavn')) ?></label>
         <input type="text" id="username" name="username" autocomplete="username" required>
 
-        <label for="password">Adgangskode</label>
+        <label for="password"><?= e(t('Adgangskode')) ?></label>
         <input type="password" id="password" name="password" autocomplete="current-password" required>
 
-        <button type="submit" class="btn btn-primary">Log ind</button>
+        <button type="submit" class="btn btn-primary"><?= e(t('Log ind')) ?></button>
     </form>
 </section>
 <?php

@@ -11,6 +11,7 @@ use LaundryBooking\Http\Response;
 use LaundryBooking\Models\ActivityLog;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $adminAuth = new AdminAuth();
 
@@ -32,18 +33,18 @@ $logs = $activityLog->recent(200);
 layout_start('Aktivitetslog');
 ?>
 <section class="card">
-    <h2>Aktivitetslog</h2>
-    <p><a href="/admin/index.php">&laquo; Tilbage til administration</a></p>
+    <h2><?= e(t('Aktivitetslog')) ?></h2>
+    <p><a href="/admin/index.php"><?= e(t('« Tilbage til administration')) ?></a></p>
 
     <table class="bookings-table">
         <thead>
         <tr>
-            <th>Tidspunkt</th>
-            <th>Aktør</th>
-            <th>Handling</th>
-            <th>Booking-id</th>
-            <th>IP</th>
-            <th>Detaljer</th>
+            <th><?= e(t('Tidspunkt')) ?></th>
+            <th><?= e(t('Aktør')) ?></th>
+            <th><?= e(t('Handling')) ?></th>
+            <th><?= e(t('Booking-id')) ?></th>
+            <th><?= e(t('IP')) ?></th>
+            <th><?= e(t('Detaljer')) ?></th>
         </tr>
         </thead>
         <tbody>
@@ -58,7 +59,7 @@ layout_start('Aktivitetslog');
             </tr>
         <?php endforeach; ?>
         <?php if ($logs === []): ?>
-            <tr><td colspan="6">Ingen aktivitet endnu.</td></tr>
+            <tr><td colspan="6"><?= e(t('Ingen aktivitet endnu.')) ?></td></tr>
         <?php endif; ?>
         </tbody>
     </table>

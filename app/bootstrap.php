@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 use LaundryBooking\Http\Response;
 use LaundryBooking\Support\Env;
+use LaundryBooking\Support\I18n;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -49,6 +50,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+$requestedLocale = $_GET['lang'] ?? null;
+if (is_string($requestedLocale) && in_array($requestedLocale, ['da', 'en'], true)) {
+    $_SESSION['locale'] = $requestedLocale;
+}
+I18n::setLocale(is_string($_SESSION['locale'] ?? null) ? $_SESSION['locale'] : 'da');
+
 Response::securityHeaders();
 if ($isHttps) {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
@@ -63,5 +70,5 @@ set_exception_handler(static function (\Throwable $exception) use ($appDebug): v
         return;
     }
 
-    echo 'Der opstod en uventet fejl. Prøv igen senere.';
+    echo I18n::translate('Der opstod en uventet fejl. Prøv igen senere.');
 });

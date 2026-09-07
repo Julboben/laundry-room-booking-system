@@ -19,6 +19,7 @@ use LaundryBooking\Services\SettingsService;
 use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -48,7 +49,7 @@ $bookingSubject = (string) $id;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = 'Sikkerhedstjek fejlede. Prøv igen.';
+        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
     } elseif (
         $rateLimiter->isLocked('cancel_client', $clientSubject)
         || $rateLimiter->isLocked('cancel_booking', $bookingSubject)
@@ -58,7 +59,7 @@ if (Request::isPost()) {
             $rateLimiter->remainingSeconds('cancel_booking', $bookingSubject)
         );
         $minutes = (int) ceil($remainingSeconds / 60);
-        $error = "For mange forsøg. Prøv igen om ca. {$minutes} minutter.";
+        $error = t('For mange forsøg. Prøv igen om ca. %d minutter.', $minutes);
     } else {
         $code = Request::post('cancellation_code', '') ?? '';
 
@@ -84,7 +85,7 @@ if (Request::isPost()) {
                 CANCEL_LOCKOUT_SECONDS
             );
 
-            $error = $result->error;
+            $error = t($result->error);
         }
     }
 }
@@ -95,14 +96,14 @@ $codeLength = $settingsService->getCancellationCodeLength();
 layout_start('Aflys booking', bodyClass: 'page-kiosk page-cancel');
 ?>
 <section class="card kiosk-card cancel-card">
-    <h2>Aflys booking</h2>
+    <h2><?= e(t('Aflys booking')) ?></h2>
 
     <?php if ($cancelled): ?>
-        <p class="alert alert-success" role="status">Bookingen er blevet fjernet.</p>
-        <p><a class="btn btn-primary" href="<?= e($calendarUrl) ?>">Tilbage til kalenderen</a></p>
+        <p class="alert alert-success" role="status"><?= e(t('Bookingen er blevet fjernet.')) ?></p>
+        <p><a class="btn btn-primary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage til kalenderen')) ?></a></p>
     <?php elseif ($booking === null): ?>
-        <p class="alert alert-error" role="alert">Bookingen findes ikke.</p>
-        <p><a class="btn btn-secondary" href="<?= e($calendarUrl) ?>">Tilbage</a></p>
+        <p class="alert alert-error" role="alert"><?= e(t('Bookingen findes ikke.')) ?></p>
+        <p><a class="btn btn-secondary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage')) ?></a></p>
     <?php else: ?>
         <?php if ($error !== null): ?>
             <p class="alert alert-error" role="alert"><?= e($error) ?></p>
@@ -112,29 +113,29 @@ layout_start('Aflys booking', bodyClass: 'page-kiosk page-cancel');
             <?= e(danish_date_long(DateHelper::fromDateString($booking['booking_date']))) ?>,
             <?= e(substr($booking['start_time'], 0, 5)) ?>&ndash;<?= e(substr($booking['end_time'], 0, 5)) ?>
         </p>
-        <p>Navn: <?= e($booking['booking_name']) ?></p>
+        <p><?= e(t('Navn:')) ?> <?= e($booking['booking_name']) ?></p>
 
-        <p>Bookingen bliver fjernet, hvis koden er korrekt.</p>
+        <p><?= e(t('Bookingen bliver fjernet, hvis koden er korrekt.')) ?></p>
 
         <form method="post" action="/cancel.php?id=<?= (int) $id ?>" novalidate>
             <?= Csrf::field() ?>
             <input type="hidden" name="id" value="<?= (int) $id ?>">
             <input type="hidden" name="return_date" value="<?= e($returnDate) ?>">
-            <label for="cancellation_code">Aflysningskode</label>
+            <label for="cancellation_code"><?= e(t('Aflysningskode')) ?></label>
             <input
                 type="text"
                 id="cancellation_code"
                 name="cancellation_code"
                 inputmode="numeric"
                 autocomplete="one-time-code"
-                placeholder="<?= (int) $codeLength ?> cifre"
+                placeholder="<?= e(t('%d cifre', $codeLength)) ?>"
                 pattern="\d{<?= (int) $codeLength ?>}"
                 minlength="<?= (int) $codeLength ?>"
                 maxlength="<?= (int) $codeLength ?>"
                 required
             >
-            <button type="submit" class="btn btn-primary">Aflys booking</button>
-            <a class="btn btn-secondary" href="<?= e($calendarUrl) ?>">Tilbage</a>
+            <button type="submit" class="btn btn-primary"><?= e(t('Aflys booking')) ?></button>
+            <a class="btn btn-secondary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage')) ?></a>
         </form>
     <?php endif; ?>
 </section>

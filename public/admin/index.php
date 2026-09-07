@@ -10,6 +10,7 @@ use LaundryBooking\Database\Connection;
 use LaundryBooking\Http\Response;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $adminAuth = new AdminAuth();
 
@@ -47,32 +48,32 @@ try {
 layout_start('Administration');
 ?>
 <section class="card">
-    <h2>Administration</h2>
+    <h2><?= e(t('Administration')) ?></h2>
     <nav class="admin-nav">
-        <a href="/admin/bookings.php">Bookinger</a>
-        <a href="/admin/settings.php">Indstillinger</a>
-        <a href="/admin/logs.php">Logs</a>
-        <a href="/admin/export.php">Eksport (CSV)</a>
-        <a href="/admin/logout.php">Log ud</a>
+        <a href="/admin/bookings.php"><?= e(t('Bookinger')) ?></a>
+        <a href="/admin/settings.php"><?= e(t('Indstillinger')) ?></a>
+        <a href="/admin/logs.php"><?= e(t('Logs')) ?></a>
+        <a href="/admin/export.php"><?= e(t('Eksport (CSV)')) ?></a>
+        <a href="/admin/logout.php"><?= e(t('Log ud')) ?></a>
     </nav>
 
     <dl class="dashboard-stats">
-        <dt>Bookinger i alt</dt>
+        <dt><?= e(t('Bookinger i alt')) ?></dt>
         <dd><?= $totalBookings ?></dd>
 
-        <dt>Bookinger i dag</dt>
+        <dt><?= e(t('Bookinger i dag')) ?></dt>
         <dd><?= $bookingsToday ?></dd>
 
-        <dt>Bookinger de næste 7 dage</dt>
+        <dt><?= e(t('Bookinger de næste 7 dage')) ?></dt>
         <dd><?= $bookingsNext7Days ?></dd>
 
-        <dt>Seneste oprydning</dt>
-        <dd><?= $lastCleanup !== false ? e((string) $lastCleanup) : 'Ukendt' ?></dd>
+        <dt><?= e(t('Seneste oprydning')) ?></dt>
+        <dd><?= $lastCleanup !== false ? e((string) $lastCleanup) : e(t('Ukendt')) ?></dd>
 
-        <dt>PHP-version</dt>
+        <dt><?= e(t('PHP-version')) ?></dt>
         <dd><?= e(PHP_VERSION) ?></dd>
 
-        <dt>Database</dt>
+        <dt><?= e(t('Database')) ?></dt>
         <dd><?= e($databaseStatus) ?></dd>
     </dl>
 </section>

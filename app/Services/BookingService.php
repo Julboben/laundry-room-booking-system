@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use LaundryBooking\Models\ActivityLog;
 use LaundryBooking\Models\Booking;
 use LaundryBooking\Support\DateHelper;
+use LaundryBooking\Support\I18n;
 use LaundryBooking\Support\Validator;
 use PDO;
 use PDOException;
@@ -66,38 +67,38 @@ final class BookingService
     }
 
     /**
-     * Validate the requested date and slot, returning a Danish error
+     * Validate the requested date and slot, returning a localized error
      * message on failure or null on success.
      */
     public function validateDateAndSlot(string $date, string $slotKey): ?string
     {
         if (!DateHelper::isValidDateString($date)) {
-            return 'Datoen er ikke gyldig.';
+            return I18n::translate('Datoen er ikke gyldig.');
         }
 
         if (!array_key_exists($slotKey, self::slots())) {
-            return 'Tiden er ikke gyldig.';
+            return I18n::translate('Tiden er ikke gyldig.');
         }
 
         $today = DateHelper::today();
         $requestedDate = DateHelper::fromDateString($date);
 
         if ($requestedDate < $today) {
-            return 'Du kan ikke booke en tid i fortiden.';
+            return I18n::translate('Du kan ikke booke en tid i fortiden.');
         }
 
         $weeksAhead = $this->settings->getBookingWeeksAhead();
         $latestDate = $today->modify('+' . $weeksAhead . ' weeks');
 
         if ($requestedDate > $latestDate) {
-            return 'Datoen ligger for langt ude i fremtiden.';
+            return I18n::translate('Datoen ligger for langt ude i fremtiden.');
         }
 
         $slot = self::slots()[$slotKey];
         $slotStart = DateHelper::fromDateString($date . ' ' . $slot['start']);
 
         if ($slotStart <= DateHelper::now()) {
-            return 'Denne tid er allerede startet.';
+            return I18n::translate('Denne tid er allerede startet.');
         }
 
         return null;
@@ -155,7 +156,10 @@ final class BookingService
         }
 
         if (!$this->isAvailable($date, $slotKey)) {
-            return new BookingCreationResult(false, error: 'Tiden er desværre allerede booket.');
+            return new BookingCreationResult(
+                false,
+                error: I18n::translate('Tiden er desværre allerede booket.')
+            );
         }
 
         $slot = self::slots()[$slotKey];
@@ -197,7 +201,10 @@ final class BookingService
             }
 
             if ($exception instanceof PDOException && $exception->getCode() === '23000') {
-                return new BookingCreationResult(false, error: 'Tiden er desværre allerede booket.');
+                return new BookingCreationResult(
+                    false,
+                    error: I18n::translate('Tiden er desværre allerede booket.')
+                );
             }
 
             throw $exception;
@@ -244,7 +251,10 @@ final class BookingService
 
             if ($booking === false) {
                 $this->pdo->rollBack();
-                return new BookingCancellationResult(false, error: 'Bookingen findes ikke.');
+                return new BookingCancellationResult(
+                    false,
+                    error: I18n::translate('Bookingen findes ikke.')
+                );
             }
 
             if (!$this->codeService->verifyCode($code, $booking['cancellation_code_hash'])) {
@@ -257,7 +267,10 @@ final class BookingService
                     userAgent: $userAgent,
                 );
 
-                return new BookingCancellationResult(false, error: 'Aflysningskoden er ikke korrekt.');
+                return new BookingCancellationResult(
+                    false,
+                    error: I18n::translate('Aflysningskoden er ikke korrekt.')
+                );
             }
 
             $statement = $this->pdo->prepare('DELETE FROM bookings WHERE id = :id');

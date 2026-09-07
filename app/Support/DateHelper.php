@@ -8,35 +8,10 @@ use DateTimeImmutable;
 use DateTimeZone;
 
 /**
- * Date helpers for the Europe/Copenhagen timezone and Danish formatting.
+ * Date helpers for the Europe/Copenhagen timezone and localized formatting.
  */
 final class DateHelper
 {
-    private const array DAY_NAMES = [
-        1 => 'mandag',
-        2 => 'tirsdag',
-        3 => 'onsdag',
-        4 => 'torsdag',
-        5 => 'fredag',
-        6 => 'lørdag',
-        7 => 'søndag',
-    ];
-
-    private const array MONTH_NAMES = [
-        1 => 'januar',
-        2 => 'februar',
-        3 => 'marts',
-        4 => 'april',
-        5 => 'maj',
-        6 => 'juni',
-        7 => 'juli',
-        8 => 'august',
-        9 => 'september',
-        10 => 'oktober',
-        11 => 'november',
-        12 => 'december',
-    ];
-
     public static function timezone(): DateTimeZone
     {
         static $timezone = null;
@@ -69,15 +44,19 @@ final class DateHelper
 
     public static function formatLong(DateTimeImmutable $date): string
     {
-        $day = self::DAY_NAMES[(int) $date->format('N')];
-        $month = self::MONTH_NAMES[(int) $date->format('n')];
+        $day = I18n::dayName((int) $date->format('N'));
+        $month = I18n::monthName((int) $date->format('n'));
+
+        if (I18n::locale() === 'en') {
+            return sprintf('%s, %s %d, %s', $day, $month, (int) $date->format('j'), $date->format('Y'));
+        }
 
         return sprintf('%s %d. %s %s', $day, (int) $date->format('j'), $month, $date->format('Y'));
     }
 
     public static function formatShort(DateTimeImmutable $date): string
     {
-        $day = self::DAY_NAMES[(int) $date->format('N')];
+        $day = I18n::dayName((int) $date->format('N'));
 
         return sprintf('%s %d/%d', $day, (int) $date->format('j'), (int) $date->format('n'));
     }

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use function LaundryBooking\Support\current_locale;
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 require_once __DIR__ . '/helpers.php';
 
@@ -16,12 +18,19 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
     $kioskCssVersion = (string) (filemtime($assetDirectory . '/kiosk.css') ?: 1);
     $calendarCssVersion = (string) (filemtime($assetDirectory . '/calendar.css') ?: 1);
     $appJsVersion = (string) (filemtime($assetDirectory . '/app.js') ?: 1);
+    $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $requestPath = is_string($requestPath) ? $requestPath : '/';
+    $languageQuery = $_GET;
+    $languageQuery['lang'] = 'da';
+    $danishUrl = $requestPath . '?' . http_build_query($languageQuery);
+    $languageQuery['lang'] = 'en';
+    $englishUrl = $requestPath . '?' . http_build_query($languageQuery);
     ?><!DOCTYPE html>
-<html lang="da">
+<html lang="<?= e(current_locale()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($title) ?> – Vaskekalender</title>
+    <title><?= e(t($title)) ?> – <?= e(t('Vaskekalender')) ?></title>
     <link rel="stylesheet" href="/assets/app.css?v=<?= e($appCssVersion) ?>">
 <?php if (str_contains($bodyClass, 'page-kiosk')): ?>
     <link rel="stylesheet" href="/assets/kiosk.css?v=<?= e($kioskCssVersion) ?>">
@@ -34,7 +43,7 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
 <body class="<?= e($bodyClass) ?>">
 <header class="site-header">
     <div class="header-inner">
-        <a class="brand" href="/calendar.php" aria-label="Vaskekalender – gå til kalenderen">
+        <a class="brand" href="/calendar.php" aria-label="<?= e(t('Vaskekalender – gå til kalenderen')) ?>">
             <span class="brand-mark" aria-hidden="true">
                 <svg viewBox="0 0 48 48" role="img">
                     <rect x="10" y="5" width="28" height="38" rx="4"></rect>
@@ -46,22 +55,29 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
                 </svg>
             </span>
             <span class="brand-copy">
-                <span class="brand-title">Vaskekalender</span>
-                <span class="brand-subtitle">Book en tid i vaskerummet</span>
+                <span class="brand-title"><?= e(t('Vaskekalender')) ?></span>
+                <span class="brand-subtitle"><?= e(t('Book en tid i vaskerummet')) ?></span>
             </span>
         </a>
+        <div class="header-actions">
+            <nav class="language-switch" aria-label="Language / Sprog">
+                <a href="<?= e($danishUrl) ?>" lang="da"<?= current_locale() === 'da' ? ' aria-current="true"' : '' ?>>DA</a>
+                <span aria-hidden="true">/</span>
+                <a href="<?= e($englishUrl) ?>" lang="en"<?= current_locale() === 'en' ? ' aria-current="true"' : '' ?>>EN</a>
+            </nav>
 <?php if ($showNav): ?>
-        <nav class="site-nav" aria-label="Primær navigation">
-            <a class="nav-calendar" href="/calendar.php">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v3M18 2v3M3 9h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path></svg>
-                <span>Kalender</span>
-            </a>
-            <a class="nav-logout" href="/logout.php">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"></path></svg>
-                <span>Log ud</span>
-            </a>
-        </nav>
+            <nav class="site-nav" aria-label="<?= e(t('Primær navigation')) ?>">
+                <a class="nav-calendar" href="/calendar.php">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v3M18 2v3M3 9h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path></svg>
+                    <span><?= e(t('Kalender')) ?></span>
+                </a>
+                <a class="nav-logout" href="/logout.php">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"></path></svg>
+                    <span><?= e(t('Log ud')) ?></span>
+                </a>
+            </nav>
 <?php endif; ?>
+        </div>
     </div>
 </header>
 <main class="site-main">
