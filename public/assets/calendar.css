@@ -45,10 +45,12 @@ body.page-calendar {
     min-height: 0;
     flex: 1 1 auto;
     padding: 12px 0;
+    display: block;
     overflow: hidden;
 }
 
 .daily-calendar {
+    width: 100%;
     height: 100%;
     min-height: 0;
     display: flex;
@@ -62,11 +64,16 @@ body.page-calendar {
     flex: 0 0 112px;
     display: grid;
     grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
-    align-items: center;
+    align-items: stretch;
     gap: 20px;
 }
 
 .day-heading {
+    height: 100%;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     text-align: center;
 }
 
@@ -111,6 +118,10 @@ body.page-calendar {
     transform: translateY(-2px);
     border-color: #b5c4b7;
     box-shadow: 0 8px 18px rgba(28, 50, 39, 0.10);
+}
+
+.day-control {
+    align-self: end;
 }
 
 .day-control-next {
@@ -427,7 +438,8 @@ body.page-calendar {
 }
 
 .day-slots {
-    height: clamp(210px, 32vh, 290px);
+    width: 100%;
+    height: clamp(320px, 44vh, 440px);
     min-height: 0;
     flex: 0 0 auto;
     display: grid;
@@ -506,16 +518,117 @@ body.page-calendar {
 }
 
 .day-slot .slot-status {
-    justify-content: center;
-    gap: 18px;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 52px 20px;
+    grid-template-areas:
+        "content"
+        "action"
+        "footer";
+    align-items: center;
+    justify-items: stretch;
+    gap: 12px;
+    text-align: center;
 }
 
-.day-slot .slot-label {
+.slot-content {
+    grid-area: content;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+    justify-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    gap: 12px;
+}
+
+.slot-hero-icon {
+    width: clamp(58px, 5vw, 72px);
+    height: clamp(58px, 5vw, 72px);
+    margin-top: 0;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+}
+
+.slot-hero-icon svg {
+    width: 62%;
+    height: 62%;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.slot-hero-available {
+    color: #315f46;
+    background: rgba(49, 95, 70, 0.11);
+}
+
+.slot-hero-person {
+    color: #aa4f3c;
+    background: rgba(187, 83, 60, 0.12);
+}
+
+.slot-hero-past {
+    color: #78827b;
+    background: rgba(120, 130, 123, 0.12);
+}
+
+.slot-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .day-slot .slot-name {
-    font-size: clamp(0.82rem, 1.25vw, 1rem);
+    max-width: 100%;
+    font-size: clamp(0.95rem, 1.45vw, 1.18rem);
+    font-weight: 700;
+}
+
+.slot-badge {
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: #a44735;
+    background: rgba(190, 76, 52, 0.12);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.slot-duration {
+    grid-area: footer;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: #66736c;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.slot-duration.is-placeholder {
+    visibility: hidden;
+}
+
+.slot-duration svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
 }
 
 .day-slot .slot-card .btn,
@@ -524,8 +637,17 @@ body.page-calendar {
     font-size: 0.9rem;
 }
 
+.day-slot .slot-card .slot-action,
+.day-slot .slot-unavailable {
+    grid-area: action;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    display: flex;
+    justify-self: stretch;
+}
+
 .slot-action {
-    gap: 8px;
     pointer-events: none;
 }
 
@@ -574,11 +696,12 @@ body.page-calendar {
 
 @media (min-width: 700px) and (max-width: 1366px) {
     .page-calendar .day-slots {
+        width: 100%;
         height: auto;
         min-height: 0;
         flex: 1 1 auto;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: minmax(0, 1fr);
     }
 
     .page-calendar .resident-note {
@@ -724,39 +847,66 @@ body.page-calendar {
     }
 
     .day-slot .slot-status {
+        grid-template-columns: minmax(0, 1fr) minmax(108px, 44%);
+        grid-template-rows: minmax(0, 1fr);
+        grid-template-areas: "content action";
+        gap: 8px;
+        text-align: left;
+    }
+
+    .day-slot .slot-content {
+        width: 100%;
+        min-width: 0;
+        grid-area: content;
+        align-self: stretch;
         flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 8px;
     }
 
-    .day-slot .slot-label {
-        min-width: 70px;
-        flex: 1 1 auto;
-        justify-content: flex-start;
+    .day-slot .slot-hero-icon {
+        width: 36px;
+        height: 36px;
+        margin-top: 0;
+        flex: 0 0 36px;
     }
 
-    .day-slot .slot-icon {
-        width: 22px;
-        height: 22px;
-        flex-basis: 22px;
-    }
-
-    .day-slot .slot-icon svg {
-        width: 14px;
-        height: 14px;
+    .day-slot .slot-copy {
+        min-width: 0;
+        align-items: flex-start;
+        gap: 3px;
     }
 
     .day-slot .slot-name {
-        font-size: 0.76rem;
+        font-size: 0.78rem;
+        text-align: left;
+    }
+
+    .day-slot .slot-badge {
+        display: inline-flex;
+        padding: 2px 7px;
+        font-size: 0.58rem;
+    }
+
+    .day-slot .slot-action,
+    .day-slot .slot-unavailable {
+        grid-area: action;
+    }
+
+    .day-slot .slot-duration {
+        display: none;
     }
 
     .day-slot .slot-card .btn,
     .day-slot .slot-unavailable {
-        width: min(56%, 190px);
+        width: 100%;
         min-height: 46px;
-        flex: 0 0 auto;
-        font-size: 0.78rem;
+        margin: 0;
+        font-size: 0.76rem;
+    }
+
+    .day-slot .slot-action-icon {
+        display: none;
     }
 
     .page-calendar .resident-note {

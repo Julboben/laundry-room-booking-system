@@ -11,20 +11,25 @@ require_once __DIR__ . '/helpers.php';
  */
 function layout_start(string $title, bool $showNav = true, string $bodyClass = ''): void
 {
+    $assetDirectory = dirname(__DIR__, 2) . '/public/assets';
+    $appCssVersion = (string) (filemtime($assetDirectory . '/app.css') ?: 1);
+    $kioskCssVersion = (string) (filemtime($assetDirectory . '/kiosk.css') ?: 1);
+    $calendarCssVersion = (string) (filemtime($assetDirectory . '/calendar.css') ?: 1);
+    $appJsVersion = (string) (filemtime($assetDirectory . '/app.js') ?: 1);
     ?><!DOCTYPE html>
 <html lang="da">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> – Vaskekalender</title>
-    <link rel="stylesheet" href="/assets/app.css">
+    <link rel="stylesheet" href="/assets/app.css?v=<?= e($appCssVersion) ?>">
 <?php if (str_contains($bodyClass, 'page-kiosk')): ?>
-    <link rel="stylesheet" href="/assets/kiosk.css">
+    <link rel="stylesheet" href="/assets/kiosk.css?v=<?= e($kioskCssVersion) ?>">
 <?php endif; ?>
 <?php if (str_contains($bodyClass, 'page-calendar')): ?>
-    <link rel="stylesheet" href="/assets/calendar.css">
+    <link rel="stylesheet" href="/assets/calendar.css?v=<?= e($calendarCssVersion) ?>">
 <?php endif; ?>
-    <script src="/assets/app.js" defer></script>
+    <script src="/assets/app.js?v=<?= e($appJsVersion) ?>" defer></script>
 </head>
 <body class="<?= e($bodyClass) ?>">
 <header class="site-header">
