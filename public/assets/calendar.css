@@ -251,10 +251,14 @@ body.page-calendar {
     border: 0;
     border-radius: var(--radius-pill);
     color: var(--color-white);
-    background: var(--color-action);
+    background: var(--gradient-action);
     font: inherit;
     font-size: 0.7rem;
     font-weight: var(--weight-bold);
+}
+
+.date-picker-submit:hover {
+    background: var(--gradient-action-hover);
 }
 
 .js .date-picker-submit {

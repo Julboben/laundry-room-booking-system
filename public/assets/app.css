@@ -8,6 +8,7 @@
     --color-green-200: #d2e2d3;
     --color-green-300: #b9d0bd;
     --color-green-600: #3f7959;
+    --color-green-650: #2c7554;
     --color-green-700: #246648;
     --color-green-800: #174f3a;
     --color-green-900: #103c2c;
@@ -37,6 +38,8 @@
     --color-warning: var(--color-amber-800);
     --color-warning-soft: var(--color-amber-50);
     --color-success: var(--color-green-700);
+    --gradient-action: linear-gradient(180deg, var(--color-green-650), var(--color-green-700));
+    --gradient-action-hover: linear-gradient(180deg, var(--color-green-700), var(--color-green-900));
 
     /* Spacing */
     --space-1: 4px;
@@ -236,7 +239,7 @@ svg {
 .language-option.is-current {
     border-radius: var(--radius-round);
     color: var(--color-white);
-    background: var(--color-action);
+    background: var(--gradient-action);
     cursor: default;
     user-select: none;
 }
@@ -291,7 +294,7 @@ svg {
 
 .site-nav .nav-logout:hover {
     color: var(--color-white);
-    background: var(--color-action);
+    background: var(--gradient-action);
     box-shadow: 0 8px 18px rgba(var(--color-green-rgb), 0.18);
 }
 
@@ -442,12 +445,12 @@ select:focus {
 
 .btn-primary {
     color: var(--color-white);
-    background: var(--color-action);
+    background: var(--gradient-action);
     box-shadow: 0 4px 12px rgba(var(--color-green-rgb), 0.16);
 }
 
 .btn-primary:hover {
-    background: var(--color-action-hover);
+    background: var(--gradient-action-hover);
     box-shadow: 0 7px 16px rgba(var(--color-green-rgb), 0.22);
 }
 
@@ -826,11 +829,11 @@ select:focus {
 }
 
 .btn-book {
-    background: linear-gradient(180deg, #2c7554, var(--color-success));
+    background: var(--gradient-action);
 }
 
 .btn-book:hover {
-    background: linear-gradient(180deg, #256648, #194d37);
+    background: var(--gradient-action-hover);
     box-shadow: 0 6px 12px rgba(var(--color-green-rgb), 0.2);
 }
 
@@ -1080,7 +1083,7 @@ select:focus {
 
 .admin-nav a:hover {
     color: var(--color-white);
-    background: var(--color-action);
+    background: var(--gradient-action);
 }
 
 .bookings-table {
