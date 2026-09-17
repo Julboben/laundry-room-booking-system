@@ -16,8 +16,10 @@ use LaundryBooking\Services\CodeService;
 use LaundryBooking\Services\SettingsService;
 use LaundryBooking\Services\WeatherService;
 use LaundryBooking\Support\DateHelper;
+use LaundryBooking\Support\I18n;
 
 use function LaundryBooking\Support\e;
+use function LaundryBooking\Support\t;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -55,15 +57,9 @@ $isLastDate = $selectedDate == $latestDate;
 $dateString = $selectedDate->format('Y-m-d');
 $bookings = $bookingService->bookingsForRange($firstBookableDate, $latestDate);
 $calendarMessage = $settingsService->getCalendarMessage();
-$monthNames = [
-    1 => 'januar', 2 => 'februar', 3 => 'marts', 4 => 'april',
-    5 => 'maj', 6 => 'juni', 7 => 'juli', 8 => 'august',
-    9 => 'september', 10 => 'oktober', 11 => 'november', 12 => 'december',
-];
-$dayNames = [
-    1 => 'Mandag', 2 => 'Tirsdag', 3 => 'Onsdag', 4 => 'Torsdag',
-    5 => 'Fredag', 6 => 'Lørdag', 7 => 'Søndag',
-];
+$displayDate = I18n::locale() === 'en'
+    ? I18n::monthName((int) $selectedDate->format('n')) . ' ' . (int) $selectedDate->format('j') . ', ' . $selectedDate->format('Y')
+    : (int) $selectedDate->format('j') . '. ' . I18n::monthName((int) $selectedDate->format('n')) . ' ' . $selectedDate->format('Y');
 $laundryTips = [
     'Ryst tøjet godt, inden du hænger det op. Det giver færre folder og kortere tørretid.',
     'Lad lågen til vaskemaskinen stå på klem efter brug, så maskinen kan tørre og holde sig frisk.',
@@ -110,27 +106,27 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
 <section class="daily-calendar" aria-labelledby="day-heading">
     <header class="day-toolbar">
         <?php if (!$isFirstDate): ?>
-            <a class="day-control" href="/calendar.php?date=<?= e($previousDate->format('Y-m-d')) ?>" aria-label="Forrige dag">
+            <a class="day-control" href="/calendar.php?date=<?= e($previousDate->format('Y-m-d')) ?>" aria-label="<?= e(t('Forrige dag')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                <span>Forrige</span>
+                <span><?= e(t('Forrige')) ?></span>
             </a>
         <?php else: ?>
             <span class="day-control is-disabled" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></svg>
-                <span>Forrige</span>
+                <span><?= e(t('Forrige')) ?></span>
             </span>
         <?php endif; ?>
 
         <div class="day-heading">
-            <span class="day-eyebrow"><?= $isToday ? 'I dag' : e($dayNames[(int) $selectedDate->format('N')]) ?></span>
-            <h2 id="day-heading"><?= (int) $selectedDate->format('j') ?>. <?= e($monthNames[(int) $selectedDate->format('n')]) ?> <?= e($selectedDate->format('Y')) ?></h2>
+            <span class="day-eyebrow"><?= e($isToday ? t('I dag') : I18n::dayName((int) $selectedDate->format('N'))) ?></span>
+            <h2 id="day-heading"><?= e($displayDate) ?></h2>
             <div class="date-actions">
                 <button class="calendar-trigger" type="button" data-calendar-open aria-haspopup="dialog">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z"></path></svg>
-                    <span>Vælg en anden dag</span>
+                    <span><?= e(t('Vælg en anden dag')) ?></span>
                 </button>
                 <form class="date-picker date-picker-fallback" method="get" action="/calendar.php" data-date-picker>
-                    <label class="visually-hidden" for="calendar_date">Vælg en anden dag</label>
+                    <label class="visually-hidden" for="calendar_date"><?= e(t('Vælg en anden dag')) ?></label>
                     <input
                         type="date"
                         id="calendar_date"
@@ -138,24 +134,24 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
                         value="<?= e($dateString) ?>"
                         min="<?= e($firstBookableDate->format('Y-m-d')) ?>"
                         max="<?= e($latestDate->format('Y-m-d')) ?>"
-                        aria-label="Vælg en anden dag"
+                        aria-label="<?= e(t('Vælg en anden dag')) ?>"
                     >
-                    <button class="date-picker-submit" type="submit">Vis</button>
+                    <button class="date-picker-submit" type="submit"><?= e(t('Vis')) ?></button>
                 </form>
                 <?php if (!$isToday && $firstBookableDate == $today): ?>
-                    <a class="today-shortcut" href="/calendar.php?date=<?= e($today->format('Y-m-d')) ?>">I dag</a>
+                    <a class="today-shortcut" href="/calendar.php?date=<?= e($today->format('Y-m-d')) ?>"><?= e(t('I dag')) ?></a>
                 <?php endif; ?>
             </div>
         </div>
 
         <?php if (!$isLastDate): ?>
-            <a class="day-control day-control-next" href="/calendar.php?date=<?= e($nextDate->format('Y-m-d')) ?>" aria-label="Næste dag">
-                <span>Næste</span>
+            <a class="day-control day-control-next" href="/calendar.php?date=<?= e($nextDate->format('Y-m-d')) ?>" aria-label="<?= e(t('Næste dag')) ?>">
+                <span><?= e(t('Næste')) ?></span>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
             </a>
         <?php else: ?>
             <span class="day-control day-control-next is-disabled" aria-hidden="true">
-                <span>Næste</span>
+                <span><?= e(t('Næste')) ?></span>
                 <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
             </span>
         <?php endif; ?>
@@ -163,24 +159,24 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
 
     <dialog class="calendar-dialog" data-calendar-dialog aria-labelledby="calendar-dialog-title">
         <div class="calendar-dialog-header">
-            <button type="button" class="month-control" data-month-previous aria-label="Forrige måned">
+            <button type="button" class="month-control" data-month-previous aria-label="<?= e(t('Forrige måned')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
             </button>
-            <h2 id="calendar-dialog-title" data-month-label>Vælg dag</h2>
-            <button type="button" class="month-control" data-month-next aria-label="Næste måned">
+            <h2 id="calendar-dialog-title" data-month-label><?= e(t('Vælg dag')) ?></h2>
+            <button type="button" class="month-control" data-month-next aria-label="<?= e(t('Næste måned')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
             </button>
-            <button type="button" class="dialog-close" data-calendar-close aria-label="Luk kalenderen">
+            <button type="button" class="dialog-close" data-calendar-close aria-label="<?= e(t('Luk kalenderen')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
             </button>
         </div>
         <div class="calendar-weekdays" aria-hidden="true">
-            <span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span>
+            <span><?= e(t('Man')) ?></span><span><?= e(t('Tir')) ?></span><span><?= e(t('Ons')) ?></span><span><?= e(t('Tor')) ?></span><span><?= e(t('Fre')) ?></span><span><?= e(t('Lør')) ?></span><span><?= e(t('Søn')) ?></span>
         </div>
         <?php foreach ($calendarMonths as $monthIndex => $calendarMonth): ?>
             <?php
             $monthKey = $calendarMonth->format('Y-m');
-            $monthLabel = ucfirst($monthNames[(int) $calendarMonth->format('n')]) . ' ' . $calendarMonth->format('Y');
+            $monthLabel = I18n::monthName((int) $calendarMonth->format('n')) . ' ' . $calendarMonth->format('Y');
             $leadingDays = (int) $calendarMonth->format('N') - 1;
             $daysInMonth = (int) $calendarMonth->format('t');
             $isSelectedMonth = $selectedDate->format('Y-m') === $monthKey;
@@ -210,10 +206,10 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
                         <a
                             class="calendar-date<?= $isSelected ? ' is-selected' : '' ?><?= $availableCount === 0 ? ' is-full' : '' ?>"
                             href="/calendar.php?date=<?= e($calendarDateString) ?>"
-                            aria-label="<?= e(danish_date_long($calendarDate)) ?>, <?= $availableCount ?> ledige tider"
+                            aria-label="<?= e(t('%s, %d ledige tider', danish_date_long($calendarDate), $availableCount)) ?>"
                         >
                             <span class="calendar-date-number"><?= $dayNumber ?></span>
-                            <span class="availability-count"><?= $availableCount ?> ledige</span>
+                            <span class="availability-count"><?= e(t('%d ledige', $availableCount)) ?></span>
                         </a>
                     <?php else: ?>
                         <span class="calendar-date is-outside" aria-hidden="true">
@@ -229,7 +225,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
         <p class="calendar-message"><?= e($calendarMessage) ?></p>
     <?php endif; ?>
 
-    <div class="day-slots" role="list" aria-label="Vasketider for <?= e(danish_date_long($selectedDate)) ?>">
+    <div class="day-slots" role="list" aria-label="<?= e(t('Vasketider for %s', danish_date_long($selectedDate))) ?>">
         <?php foreach ($slots as $slotKey => $slot): ?>
             <?php
             $booking = $bookings[$dateString . '|' . $slotKey] ?? null;
@@ -239,8 +235,8 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
                 ? '/cancel.php?id=' . $booking->id . '&date=' . rawurlencode($dateString)
                 : '/book.php?date=' . rawurlencode($dateString) . '&slot=' . rawurlencode($slotKey);
             $slotAriaLabel = $booking !== null
-                ? sprintf('Aflys bookingen for %s fra %s til %s', $booking->bookingName, $slot['start'], $slot['end'])
-                : sprintf('Book tiden fra %s til %s', $slot['start'], $slot['end']);
+                ? t('Aflys bookingen for %s fra %s til %s', $booking->bookingName, $slot['start'], $slot['end'])
+                : t('Book tiden fra %s til %s', $slot['start'], $slot['end']);
             ?>
             <?php if ($isPast): ?>
                 <article class="day-slot" role="listitem">
@@ -274,18 +270,18 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
         </div>
         <div class="note-copy">
             <?php if ($weatherForecast !== null): ?>
-                <h2><?= $weatherForecast['isGoodDryingWeather'] ? 'Godt tørrevejr' : 'Tørrevejret' ?> <?= e($weatherForecast['period']) ?></h2>
+                <h2><?= e($weatherForecast['isGoodDryingWeather'] ? t('Godt tørrevejr') : t('Tørrevejret')) ?> <?= e($weatherForecast['period']) ?></h2>
                 <p><?= e($weatherForecast['recommendation']) ?></p>
                 <div class="weather-meta">
                     <span><?= e($weatherForecast['location']) ?></span>
                     <span><?= (int) $weatherForecast['temperature'] ?>&deg;C</span>
-                    <span><?= (int) $weatherForecast['rainProbability'] ?>% regn</span>
-                    <span><?= (int) $weatherForecast['windSpeed'] ?> km/t vind</span>
-                    <span>Vejrdata fra Open-Meteo</span>
+                    <span><?= e(t('%d%% regn', (int) $weatherForecast['rainProbability'])) ?></span>
+                    <span><?= e(t('%d km/t vind', (int) $weatherForecast['windSpeed'])) ?></span>
+                    <span><?= e(t('Vejrdata fra Open-Meteo')) ?></span>
                 </div>
             <?php else: ?>
-                <h2>Dagens vasketip</h2>
-                <p><?= e($laundryTip) ?></p>
+                <h2><?= e(t('Dagens vasketip')) ?></h2>
+                <p><?= e(t($laundryTip)) ?></p>
             <?php endif; ?>
         </div>
         <?php if ($footerImageAvailable): ?>

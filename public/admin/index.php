@@ -74,7 +74,7 @@ layout_start('Administration');
         <dd><?= e(PHP_VERSION) ?></dd>
 
         <dt><?= e(t('Database')) ?></dt>
-        <dd><?= e($databaseStatus) ?></dd>
+        <dd><?= e(t($databaseStatus)) ?></dd>
     </dl>
 </section>
 <?php

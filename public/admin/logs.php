@@ -51,8 +51,8 @@ layout_start('Aktivitetslog');
         <?php foreach ($logs as $log): ?>
             <tr>
                 <td><?= e((string) $log['created_at']) ?></td>
-                <td><?= e((string) $log['actor_type']) ?></td>
-                <td><?= e((string) $log['action']) ?></td>
+                <td><?= e(t((string) $log['actor_type'])) ?></td>
+                <td><?= e(t((string) $log['action'])) ?></td>
                 <td><?= $log['booking_id'] !== null ? (int) $log['booking_id'] : '' ?></td>
                 <td><?= e((string) ($log['ip_address'] ?? '')) ?></td>
                 <td><?= e((string) ($log['details'] ?? '')) ?></td>

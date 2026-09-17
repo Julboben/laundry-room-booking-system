@@ -3,7 +3,8 @@
 A browser-based laundry-room calendar designed for a shared, wall-mounted
 iPad in a residential association. Residents use one property access code
 to view available times, book a machine, and cancel a booking without
-needing individual accounts. The resident interface is in Danish.
+needing individual accounts. The resident and administration interfaces can
+be switched between Danish and English.
 
 The project replaces a paper booking calendar with a simple interface that
 works well at a glance and is comfortable to use by touch. It also shows an
@@ -35,6 +36,9 @@ WebSockets are required.
 - CSRF protection, prepared statements, output escaping, rate
   limiting, and secure session cookies.
 - Core booking and cancellation flows work without JavaScript.
+- Danish/English language selector across resident and admin pages; the chosen
+  language is stored in the current browser session and dates, weather advice,
+  validation errors, labels, and accessibility text are localized.
 
 ## Intended kiosk setup
 

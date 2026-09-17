@@ -12,6 +12,7 @@ use LaundryBooking\Support\Env;
 use LaundryBooking\Support\I18n;
 
 require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/Support/I18n.php';
 
 Env::load(__DIR__ . '/../.env');
 
