@@ -1,28 +1,89 @@
 
 :root {
     color-scheme: light;
-    --ink: #14261f;
-    --ink-soft: #53615b;
-    --forest: #174f3a;
-    --forest-dark: #103c2c;
-    --forest-light: #eaf2e9;
-    --sage: #d8e5d7;
-    --cream: #faf9f4;
-    --surface: #fffefa;
-    --line: #dfe4dd;
-    --line-strong: #cdd6cd;
-    --danger: #bd4939;
-    --danger-dark: #9d392d;
-    --danger-soft: #fae8e3;
-    --warning-soft: #fcf5dd;
-    --warning-line: #ebdfb8;
-    --success: #246748;
+
+    /* Color primitives */
+    --color-green-50: #f3f7f1;
+    --color-green-100: #e7f0e6;
+    --color-green-200: #d2e2d3;
+    --color-green-300: #b9d0bd;
+    --color-green-600: #3f7959;
+    --color-green-700: #246648;
+    --color-green-800: #174f3a;
+    --color-green-900: #103c2c;
+    --color-green-rgb: 23, 79, 58;
+    --color-red-50: #fcf0ec;
+    --color-red-200: #f1d8d1;
+    --color-red-600: #bd4939;
+    --color-red-700: #9d392d;
+    --color-red-800: #8e3027;
+    --color-amber-50: #fcf5dd;
+    --color-amber-200: #ebdfb8;
+    --color-amber-800: #745718;
+
+    /* Neutral and semantic colors */
+    --color-ink: #14261f;
+    --color-text-muted: #596760;
+    --color-canvas: #faf9f4;
+    --color-surface: #fffefa;
+    --color-white: #ffffff;
+    --color-border: #dde4dd;
+    --color-action: var(--color-green-800);
+    --color-action-hover: var(--color-green-900);
+    --color-action-soft: var(--color-green-100);
+    --color-danger: var(--color-red-600);
+    --color-danger-hover: var(--color-red-700);
+    --color-danger-soft: #fae8e3;
+    --color-warning: var(--color-amber-800);
+    --color-warning-soft: var(--color-amber-50);
+    --color-success: var(--color-green-700);
+
+    /* Spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 40px;
+
+    /* Typography */
+    --text-xs: 0.76rem;
+    --text-sm: 0.82rem;
+    --text-md: 1rem;
+    --text-lg: 1.1rem;
+    --text-xl: 1.35rem;
+    --text-2xl: 2rem;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    /* Shape and controls */
+    --radius-sm: 10px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 22px;
+    --radius-pill: 999px;
+    --radius-round: 50%;
+    --control-sm: 38px;
+    --control-md: 44px;
+    --control-lg: 52px;
+    --touch-target: 44px;
+
+    /* Elevation and focus */
     --shadow-sm: 0 2px 8px rgba(28, 50, 39, 0.06);
     --shadow-md: 0 12px 36px rgba(28, 50, 39, 0.10);
-    --radius-sm: 10px;
-    --radius-md: 16px;
-    --radius-lg: 22px;
-    --touch-min: 44px;
+    --shadow-lg: 0 10px 22px rgba(28, 50, 39, 0.11);
+    --focus-ring: 0 0 0 4px rgba(var(--color-green-rgb), 0.12);
+    --focus-outline: 3px solid rgba(var(--color-green-rgb), 0.42);
+
+    /* Motion */
+    --duration-fast: 160ms;
+    --duration-base: 180ms;
+    --duration-slow: 300ms;
+    --ease-standard: ease;
 }
 
 * {
@@ -36,19 +97,19 @@ html {
 body {
     min-width: 320px;
     margin: 0;
-    color: var(--ink);
+    color: var(--color-ink);
     background:
         radial-gradient(circle at 4% 1%, rgba(205, 222, 203, 0.34), transparent 26rem),
         radial-gradient(circle at 93% 12%, rgba(232, 226, 195, 0.22), transparent 28rem),
-        var(--cream);
+        var(--color-canvas);
     font-family: "Avenir Next", Avenir, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 16px;
+    font-size: var(--text-md);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
 
 a {
-    color: var(--forest);
+    color: var(--color-action);
 }
 
 svg {
@@ -72,14 +133,14 @@ svg {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 32px;
+    gap: var(--space-7);
 }
 
 .brand {
     display: inline-flex;
     align-items: center;
-    gap: 24px;
-    color: var(--ink);
+    gap: var(--space-6);
+    color: var(--color-ink);
     text-decoration: none;
 }
 
@@ -89,23 +150,23 @@ svg {
     flex: 0 0 74px;
     display: grid;
     place-items: center;
-    border: 1px solid #dce4d8;
-    border-radius: 50%;
-    background: linear-gradient(145deg, #f8faf4, #e7eee4);
-    box-shadow: inset 0 1px 0 #fff, var(--shadow-sm);
-    transition: transform 300ms ease, box-shadow 300ms ease;
+    border: 1px solid var(--color-green-200);
+    border-radius: var(--radius-round);
+    background: linear-gradient(145deg, var(--color-green-50), var(--color-green-100));
+    box-shadow: inset 0 1px 0 var(--color-white), var(--shadow-sm);
+    transition: transform var(--duration-slow) var(--ease-standard), box-shadow var(--duration-slow) var(--ease-standard);
 }
 
 .brand:hover .brand-mark {
     transform: rotate(-3deg) scale(1.04);
-    box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(28, 50, 39, 0.12);
+    box-shadow: inset 0 1px 0 var(--color-white), 0 8px 20px rgba(28, 50, 39, 0.12);
 }
 
 .brand-mark svg {
     width: 45px;
     height: 45px;
     fill: none;
-    stroke: var(--ink);
+    stroke: var(--color-ink);
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.7;
@@ -118,14 +179,14 @@ svg {
 
 .brand-title {
     font-size: clamp(1.75rem, 2.8vw, 2.55rem);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -0.045em;
     line-height: 1.15;
 }
 
 .brand-subtitle {
-    color: #4a524e;
-    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
 }
 
 .header-actions {
@@ -135,29 +196,53 @@ svg {
 }
 
 .language-switch {
-    min-height: 34px;
-    padding: 3px 8px;
+    height: 50px;
+    min-height: 50px;
+    padding: 4px 6px;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    color: #7b857f;
+    gap: 3px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
     background: rgba(255, 255, 255, 0.55);
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
 }
 
-.language-switch a {
-    padding: 3px 5px;
-    border-radius: 999px;
-    color: #778079;
+.language-option {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
     text-decoration: none;
 }
 
-.language-switch a[aria-current="true"] {
-    color: #fff;
-    background: var(--forest);
+.language-option[href] {
+    transition: color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+}
+
+.language-option[href]:hover {
+    color: var(--color-action);
+    background: var(--color-action-soft);
+}
+
+.language-option.is-current {
+    border-radius: var(--radius-round);
+    color: var(--color-white);
+    background: var(--color-action);
+    cursor: default;
+    user-select: none;
+}
+
+.language-separator {
+    color: #adb4af;
 }
 
 .site-nav {
@@ -172,11 +257,11 @@ svg {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    border-radius: 999px;
-    color: var(--ink);
-    font-weight: 600;
+    border-radius: var(--radius-pill);
+    color: var(--color-ink);
+    font-weight: var(--weight-semibold);
     text-decoration: none;
-    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    transition: background-color var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .site-nav svg,
@@ -195,19 +280,19 @@ svg {
 }
 
 .nav-calendar:hover {
-    background: var(--forest-light);
+    background: var(--color-action-soft);
 }
 
 .site-nav .nav-logout {
-    border: 1px solid var(--forest);
+    border: 1px solid var(--color-action);
     background: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 2px 8px rgba(23, 79, 58, 0.04);
+    box-shadow: 0 2px 8px rgba(var(--color-green-rgb), 0.04);
 }
 
 .site-nav .nav-logout:hover {
-    color: #fff;
-    background: var(--forest);
-    box-shadow: 0 8px 18px rgba(23, 79, 58, 0.18);
+    color: var(--color-white);
+    background: var(--color-action);
+    box-shadow: 0 8px 18px rgba(var(--color-green-rgb), 0.18);
 }
 
 .site-main {
@@ -221,8 +306,8 @@ svg {
 .card {
     width: 100%;
     padding: clamp(24px, 4vw, 46px);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
     background: rgba(255, 254, 250, 0.92);
     box-shadow: var(--shadow-sm);
     animation: rise-in 500ms cubic-bezier(.2, .8, .2, 1) both;
@@ -230,7 +315,7 @@ svg {
 
 .card h2 {
     margin: 0 0 8px;
-    font-size: clamp(1.55rem, 3vw, 2rem);
+    font-size: clamp(1.55rem, 3vw, var(--text-2xl));
     letter-spacing: -0.03em;
 }
 
@@ -244,31 +329,31 @@ svg {
     border: 1px solid;
     border-radius: var(--radius-sm);
     margin: 10px 0 18px;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 
 .alert-error {
     border-color: #e7b7ae;
-    color: #8e3027;
-    background: var(--danger-soft);
+    color: var(--color-red-800);
+    background: var(--color-danger-soft);
 }
 
 .alert-success {
-    border-color: #b8d5c2;
-    color: #19573a;
-    background: #e8f4ea;
+    border-color: var(--color-green-300);
+    color: var(--color-green-900);
+    background: var(--color-green-100);
 }
 
 .alert-warning {
-    border-color: var(--warning-line);
-    color: #745718;
-    background: var(--warning-soft);
+    border-color: var(--color-amber-200);
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
 }
 
 label {
     display: block;
     margin: 18px 0 7px;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 
 input,
@@ -277,30 +362,30 @@ select {
     width: 100%;
     min-height: 48px;
     padding: 10px 13px;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--color-green-200);
     border-radius: var(--radius-sm);
     outline: none;
-    color: var(--ink);
-    background: #fff;
+    color: var(--color-ink);
+    background: var(--color-white);
     font: inherit;
-    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+    transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
 input:hover,
 textarea:hover,
 select:hover {
-    border-color: #aab9ad;
+    border-color: var(--color-green-300);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-    border-color: var(--forest);
-    box-shadow: 0 0 0 4px rgba(23, 79, 58, 0.12);
+    border-color: var(--color-action);
+    box-shadow: var(--focus-ring);
 }
 
 :where(a, button):focus-visible {
-    outline: 3px solid rgba(23, 79, 58, 0.42);
+    outline: var(--focus-outline);
     outline-offset: 3px;
 }
 
@@ -308,7 +393,7 @@ select:focus {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
 }
 
 .checkbox-label input {
@@ -316,23 +401,24 @@ select:focus {
     min-width: 22px;
     min-height: 22px;
     margin: 1px 0 0;
-    accent-color: var(--forest);
+    accent-color: var(--color-action);
 }
 
 .btn {
-    min-height: var(--touch-min);
+    min-height: var(--touch-target);
     margin: 18px 8px 0 0;
     padding: 9px 20px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 9px;
     border: 1px solid transparent;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-pill);
     cursor: pointer;
     font: inherit;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     text-decoration: none;
-    transition: transform 160ms ease, box-shadow 160ms ease, color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+    transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
 }
 
 .btn:hover {
@@ -343,31 +429,42 @@ select:focus {
     transform: translateY(0) scale(0.98);
 }
 
+.btn > svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+}
+
 .btn-primary {
-    color: #fff;
-    background: var(--forest);
-    box-shadow: 0 4px 12px rgba(23, 79, 58, 0.16);
+    color: var(--color-white);
+    background: var(--color-action);
+    box-shadow: 0 4px 12px rgba(var(--color-green-rgb), 0.16);
 }
 
 .btn-primary:hover {
-    background: var(--forest-dark);
-    box-shadow: 0 7px 16px rgba(23, 79, 58, 0.22);
+    background: var(--color-action-hover);
+    box-shadow: 0 7px 16px rgba(var(--color-green-rgb), 0.22);
 }
 
 .btn-secondary {
-    border-color: var(--line-strong);
-    color: var(--ink);
-    background: #f3f4ef;
+    border-color: var(--color-green-200);
+    color: var(--color-ink);
+    background: var(--color-green-50);
 }
 
 .btn-secondary:hover {
-    border-color: #b6c2b7;
-    background: #e9ece6;
+    border-color: var(--color-green-300);
+    background: var(--color-green-100);
 }
 
 .btn-danger {
-    color: #fff;
-    background: var(--danger);
+    color: var(--color-white);
+    background: var(--color-danger);
 }
 
 /* Calendar */
@@ -381,8 +478,8 @@ select:focus {
     grid-template-columns: minmax(250px, 1fr) auto minmax(250px, 1fr);
     grid-template-areas: "actions title next";
     align-items: center;
-    gap: 24px;
-    margin-bottom: 20px;
+    gap: var(--space-6);
+    margin-bottom: var(--space-5);
 }
 
 .week-title {
@@ -406,26 +503,26 @@ select:focus {
 
 .week-control {
     min-width: 174px;
-    min-height: 52px;
+    min-height: var(--control-lg);
     padding: 0 22px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 14px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    color: var(--ink);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-ink);
     background: rgba(255, 255, 255, 0.5);
     box-shadow: 0 3px 10px rgba(28, 50, 39, 0.025);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     text-decoration: none;
-    transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+    transition: transform var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard), background-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .week-control:hover {
     transform: translateY(-2px);
     border-color: #b7c5b9;
-    background: #fff;
+    background: var(--color-white);
     box-shadow: var(--shadow-sm);
 }
 
@@ -458,7 +555,7 @@ select:focus {
 }
 
 .calendar-message {
-    border: 1px solid var(--warning-line);
+    border: 1px solid var(--color-amber-200);
     border-radius: 14px;
     background: linear-gradient(95deg, rgba(252, 248, 229, 0.92), rgba(255, 251, 237, 0.75));
     margin: 0 0 15px;
@@ -480,7 +577,7 @@ select:focus {
 }
 
 .calendar-scroll:focus-visible {
-    outline: 3px solid rgba(23, 79, 58, 0.35);
+    outline: 3px solid rgba(var(--color-green-rgb), 0.35);
     outline-offset: 3px;
 }
 
@@ -501,15 +598,15 @@ select:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--line);
-    border-radius: 16px 16px 10px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-sm);
     background: rgba(255, 255, 255, 0.43);
 }
 
 .calendar-corner {
     color: #758078;
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
@@ -537,13 +634,13 @@ select:focus {
 
 .day-name {
     font-size: 1.08rem;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
 }
 
 .day-date {
     color: #35443d;
     font-size: 0.95rem;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
 }
 
 .calendar-day-heading.is-past {
@@ -561,11 +658,11 @@ select:focus {
     right: 7px;
     top: 6px;
     padding: 2px 6px;
-    border-radius: 999px;
-    color: #fff;
-    background: var(--forest);
+    border-radius: var(--radius-pill);
+    color: var(--color-white);
+    background: var(--color-action);
     font-size: 0.59rem;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     line-height: 1.35;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -583,12 +680,12 @@ select:focus {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     background: rgba(255, 255, 255, 0.45);
     color: #25342d;
     font-size: 0.88rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     white-space: nowrap;
 }
 
@@ -613,14 +710,14 @@ select:focus {
     padding: 15px 14px 13px;
     display: flex;
     border: 1px solid transparent;
-    border-radius: 12px;
-    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, filter 200ms ease;
+    border-radius: var(--radius-md);
+    transition: transform 200ms var(--ease-standard), box-shadow 200ms var(--ease-standard), border-color 200ms var(--ease-standard), filter 200ms var(--ease-standard);
 }
 
 .slot-card:hover {
     z-index: 1;
     transform: translateY(-3px);
-    box-shadow: 0 10px 22px rgba(28, 50, 39, 0.11);
+    box-shadow: var(--shadow-lg);
     filter: saturate(1.03);
 }
 
@@ -630,8 +727,8 @@ select:focus {
 }
 
 .slot-booked {
-    border-color: #f1d8d1;
-    background: linear-gradient(145deg, #fcf0ec, #f9e3dc);
+    border-color: var(--color-red-200);
+    background: linear-gradient(145deg, var(--color-red-50), #f9e3dc);
 }
 
 .slot-past {
@@ -659,7 +756,7 @@ select:focus {
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .slot-icon {
@@ -668,9 +765,9 @@ select:focus {
     flex: 0 0 27px;
     display: grid;
     place-items: center;
-    border-radius: 50%;
-    color: #3f674f;
-    background: rgba(216, 229, 215, 0.8);
+    border-radius: var(--radius-round);
+    color: var(--color-success);
+    background: var(--color-action-soft);
 }
 
 .slot-icon-person {
@@ -695,16 +792,16 @@ select:focus {
 
 .slot-name {
     overflow: hidden;
-    color: var(--ink);
+    color: var(--color-ink);
     font-size: 0.98rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .slot-unavailable {
     width: 100%;
-    min-height: 38px;
+    min-height: var(--control-sm);
     padding: 7px 8px;
     display: grid;
     place-items: center;
@@ -712,29 +809,29 @@ select:focus {
     border-radius: 9px;
     color: #7c847e;
     background: rgba(255, 255, 255, 0.35);
-    font-size: 0.76rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
 }
 
 .slot-card .btn {
     width: 100%;
-    min-height: 38px;
+    min-height: var(--control-sm);
     margin: 0;
     padding: 7px 8px;
     border: 0;
     border-radius: 9px;
-    color: #fff;
-    font-size: 0.82rem;
-    box-shadow: 0 3px 8px rgba(23, 79, 58, 0.12);
+    color: var(--color-white);
+    font-size: var(--text-sm);
+    box-shadow: 0 3px 8px rgba(var(--color-green-rgb), 0.12);
 }
 
 .btn-book {
-    background: linear-gradient(180deg, #2c7554, #246648);
+    background: linear-gradient(180deg, #2c7554, var(--color-success));
 }
 
 .btn-book:hover {
     background: linear-gradient(180deg, #256648, #194d37);
-    box-shadow: 0 6px 12px rgba(23, 79, 58, 0.2);
+    box-shadow: 0 6px 12px rgba(var(--color-green-rgb), 0.2);
 }
 
 .btn-cancel {
@@ -755,7 +852,7 @@ select:focus {
     align-items: center;
     gap: 22px;
     overflow: hidden;
-    border: 1px solid var(--line);
+    border: 1px solid var(--color-border);
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.43);
     animation: rise-in 480ms 390ms cubic-bezier(.2, .8, .2, 1) both;
@@ -767,16 +864,16 @@ select:focus {
     flex: 0 0 60px;
     display: grid;
     place-items: center;
-    border: 1px solid #d5e0d3;
-    border-radius: 50%;
-    background: #f5f8f1;
+    border: 1px solid var(--color-green-200);
+    border-radius: var(--radius-round);
+    background: var(--color-green-50);
 }
 
 .note-icon svg {
     width: 40px;
     height: 40px;
     fill: none;
-    stroke: var(--forest);
+    stroke: var(--color-action);
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 1.8;
@@ -801,7 +898,7 @@ select:focus {
 
 .note-copy h2 {
     margin: 0 0 3px;
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
 }
 
 .note-copy p {
@@ -811,13 +908,13 @@ select:focus {
 }
 
 .weather-note {
-    border-color: #d7e2d4;
-    background: linear-gradient(105deg, rgba(250, 250, 244, 0.92), rgba(236, 243, 232, 0.72));
+    border-color: var(--color-green-200);
+    background: linear-gradient(105deg, var(--color-white), var(--color-green-50));
 }
 
 .weather-note.is-good-weather {
-    border-color: #c7dcc5;
-    background: linear-gradient(105deg, rgba(250, 250, 240, 0.95), rgba(226, 241, 221, 0.8));
+    border-color: var(--color-green-300);
+    background: linear-gradient(105deg, var(--color-white), var(--color-green-100));
 }
 
 .weather-meta {
@@ -827,7 +924,7 @@ select:focus {
     align-items: center;
     gap: 5px 14px;
     color: #647069;
-    font-size: 0.76rem;
+    font-size: var(--text-xs);
 }
 
 .weather-meta span {
@@ -867,9 +964,9 @@ select:focus {
     display: flex;
     align-items: center;
     gap: 14px;
-    border: 1px solid #ceddce;
+    border: 1px solid var(--color-green-200);
     border-radius: 14px;
-    background: linear-gradient(145deg, #f4f8f1, #ebf2e8);
+    background: linear-gradient(145deg, var(--color-green-50), var(--color-green-100));
 }
 
 .booking-summary-icon {
@@ -878,8 +975,8 @@ select:focus {
     flex: 0 0 44px;
     display: grid;
     place-items: center;
-    border-radius: 12px;
-    color: var(--forest);
+    border-radius: var(--radius-md);
+    color: var(--color-action);
     background: rgba(255, 255, 255, 0.7);
 }
 
@@ -905,20 +1002,20 @@ select:focus {
 
 .booking-summary div > span {
     margin-top: 2px;
-    color: var(--ink-soft);
+    color: var(--color-text-muted);
 }
 
 .form-hint {
     margin-top: 6px;
     display: block;
     color: #6c766f;
-    font-size: 0.82rem;
+    font-size: var(--text-sm);
 }
 
 .booking-notes {
     margin: 24px 0 2px;
     padding: 18px 20px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--color-border);
     border-radius: 14px;
     background: #f7f7f3;
 }
@@ -949,7 +1046,7 @@ select:focus {
     height: 19px;
     flex: 0 0 19px;
     margin-top: 1px;
-    color: var(--forest);
+    color: var(--color-action);
 }
 
 .cancellation-code .code {
@@ -957,10 +1054,10 @@ select:focus {
     display: inline-block;
     border: 1px dashed #9aab9d;
     border-radius: var(--radius-sm);
-    color: var(--forest-dark);
-    background: #eef3ed;
+    color: var(--color-action-hover);
+    background: var(--color-green-50);
     font-size: clamp(1.8rem, 7vw, 2.6rem);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: 0.28em;
     overflow-wrap: anywhere;
 }
@@ -970,20 +1067,20 @@ select:focus {
     display: flex;
     flex-wrap: wrap;
     gap: 9px;
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .admin-nav a {
     padding: 9px 14px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
     text-decoration: none;
-    transition: background-color 160ms ease, color 160ms ease;
+    transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
 }
 
 .admin-nav a:hover {
-    color: #fff;
-    background: var(--forest);
+    color: var(--color-white);
+    background: var(--color-action);
 }
 
 .bookings-table {
@@ -994,12 +1091,12 @@ select:focus {
 .bookings-table th,
 .bookings-table td {
     padding: 12px 10px;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--color-border);
     text-align: left;
 }
 
 .bookings-table th {
-    color: var(--ink-soft);
+    color: var(--color-text-muted);
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -1008,29 +1105,29 @@ select:focus {
 .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .dashboard-stats dt,
 .dashboard-stats dd {
     margin: 0;
     padding: 13px 16px;
-    background: #f2f4ef;
+    background: var(--color-green-50);
 }
 
 .dashboard-stats dt {
     padding-bottom: 0;
     border-radius: 10px 10px 0 0;
-    color: var(--ink-soft);
+    color: var(--color-text-muted);
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 
 .dashboard-stats dd {
     padding-top: 3px;
     border-radius: 0 0 10px 10px;
-    font-size: 1.35rem;
-    font-weight: 700;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
 }
 
 @keyframes rise-in {
@@ -1110,7 +1207,7 @@ select:focus {
         min-height: 54px;
         flex: 0 0 54px;
         margin-bottom: 8px;
-        gap: 12px;
+        gap: var(--space-3);
     }
 
     .page-calendar .week-title h2 {
@@ -1119,13 +1216,13 @@ select:focus {
 
     .page-calendar .week-title p {
         margin-top: 1px;
-        font-size: 0.82rem;
+        font-size: var(--text-sm);
     }
 
     .page-calendar .week-control {
         min-height: 40px;
         padding: 0 13px;
-        border-radius: 12px;
+        border-radius: var(--radius-md);
         font-size: 0.78rem;
     }
 
@@ -1133,7 +1230,7 @@ select:focus {
         flex: 0 0 auto;
         margin-bottom: 7px;
         padding: 7px 12px;
-        font-size: 0.76rem;
+        font-size: var(--text-xs);
     }
 
     .page-calendar .calendar-swipe-hint {
@@ -1169,7 +1266,7 @@ select:focus {
     }
 
     .page-calendar .day-name {
-        font-size: 0.82rem;
+        font-size: var(--text-sm);
     }
 
     .page-calendar .day-date {
@@ -1297,7 +1394,7 @@ select:focus {
     .week-toolbar {
         grid-template-columns: 1fr auto;
         grid-template-areas: "title title" "actions next";
-        gap: 16px;
+        gap: var(--space-4);
     }
 
     .week-actions {
@@ -1346,11 +1443,11 @@ select:focus {
 
     .header-inner {
         min-height: 94px;
-        gap: 12px;
+        gap: var(--space-3);
     }
 
     .brand {
-        gap: 12px;
+        gap: var(--space-3);
     }
 
     .brand-mark {
@@ -1379,9 +1476,17 @@ select:focus {
     }
 
     .language-switch {
-        min-height: 30px;
-        padding: 2px 5px;
+        height: 46px;
+        min-height: 46px;
+        padding: 3px 5px;
         font-size: 0.65rem;
+    }
+
+    .language-option {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
     }
 
     .site-nav .nav-logout {
@@ -1441,7 +1546,7 @@ select:focus {
         padding: 8px;
         flex-direction: column;
         gap: 3px;
-        font-size: 0.76rem;
+        font-size: var(--text-xs);
     }
 
     .slot-card {

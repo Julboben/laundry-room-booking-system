@@ -42,18 +42,30 @@ $durationLabel = $durationMinutes === 60
                     <span class="slot-badge"><?= e(t('Optaget')) ?></span>
                 </span>
             </span>
-            <span class="btn btn-cancel slot-action"><?= e(t('Aflys booking')) ?></span>
+            <span class="btn btn-cancel slot-action">
+                            <?= e(t('Aflys booking')) ?>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+                        </span>
             <span class="slot-duration is-placeholder" aria-hidden="true"><?= e($durationLabel) ?></span>
         <?php else: ?>
             <span class="slot-content">
                 <span class="slot-hero-icon slot-hero-available" aria-hidden="true">
-                    <svg viewBox="0 0 32 32"><path d="M9 4v4M23 4v4M5 11h22M8 6h16a3 3 0 0 1 3 3v18H5V9a3 3 0 0 1 3-3Z"></path><path d="m11 19 3 3 7-7"></path></svg>
+                    <svg viewBox="0 0 40 40">
+                        <rect x="8" y="5" width="24" height="30" rx="3"></rect>
+                        <path d="M8 12h24M13 8.5h2M25 8.5h3"></path>
+                        <circle cx="20" cy="24" r="7"></circle>
+                        <path d="M17 22c1.7-1.8 4.3-1.8 6 0"></path>
+                    </svg>
                 </span>
                 <span class="slot-copy">
                     <span class="slot-name"><?= e(t('Ledig')) ?></span>
+                    <span class="slot-description"><?= e(t('Vaskemaskine og tørretumbler')) ?></span>
                 </span>
             </span>
-            <span class="btn btn-book slot-action"><?= e(t('Book tid')) ?></span>
+            <span class="btn btn-book slot-action">
+                <?= e(t('Book tid')) ?>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+            </span>
             <span class="slot-duration">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg>
                 <?= e($durationLabel) ?>

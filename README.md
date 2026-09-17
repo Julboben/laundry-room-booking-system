@@ -136,6 +136,29 @@ configured through `.env` (they are skipped automatically if
 `activity_logs` tables before each test, so point `.env` at a
 disposable development/test database, not production.
 
+## Design tokens
+
+The shared design system is defined in the `:root` block of
+`public/assets/app.css`. Component styles in `app.css`, `kiosk.css`, and
+`calendar.css` consume these tokens instead of defining independent visual
+values.
+
+The tokens cover:
+
+- Primitive and semantic colors for actions, success, danger, warnings,
+  surfaces, borders, and text.
+- A consistent 4px-based spacing scale.
+- Typography sizes and weights.
+- Card, control, pill, and circular radii.
+- Standard control and touch-target heights.
+- Elevation, focus rings, animation durations, and easing.
+
+New components should use semantic tokens such as `--color-action`,
+`--color-danger`, and `--color-text-muted` wherever intent matters. Primitive
+scale values such as `--color-green-200` should be reserved for composing new
+semantic or state treatments. Unique responsive geometry may remain local to
+the component when it is not reusable.
+
 ## Project structure
 
 See `app/`, `public/`, `scripts/`, and `tests/` for the application code,

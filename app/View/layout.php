@@ -61,9 +61,15 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
         </a>
         <div class="header-actions">
             <nav class="language-switch" aria-label="Language / Sprog">
-                <a href="<?= e($danishUrl) ?>" lang="da"<?= current_locale() === 'da' ? ' aria-current="true"' : '' ?>>DA</a>
-                <span aria-hidden="true">/</span>
-                <a href="<?= e($englishUrl) ?>" lang="en"<?= current_locale() === 'en' ? ' aria-current="true"' : '' ?>>EN</a>
+<?php if (current_locale() === 'da'): ?>
+                <span class="language-option is-current" lang="da" aria-current="true">DA</span>
+                <span class="language-separator" aria-hidden="true">/</span>
+                <a class="language-option" href="<?= e($englishUrl) ?>" lang="en">EN</a>
+<?php else: ?>
+                <a class="language-option" href="<?= e($danishUrl) ?>" lang="da">DA</a>
+                <span class="language-separator" aria-hidden="true">/</span>
+                <span class="language-option is-current" lang="en" aria-current="true">EN</span>
+<?php endif; ?>
             </nav>
 <?php if ($showNav): ?>
             <nav class="site-nav" aria-label="<?= e(t('Primær navigation')) ?>">

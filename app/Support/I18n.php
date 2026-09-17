@@ -72,6 +72,7 @@ final class I18n
         'Optaget' => 'Occupied',
         'Ledig' => 'Available',
         'Book tid' => 'Book time',
+        'Vaskemaskine og tørretumbler' => 'Washing machine & dryer',
         '1 time' => '1 hour',
         '%d timer' => '%d hours',
         'Godt tørrevejr' => 'Good drying weather',

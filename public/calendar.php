@@ -238,10 +238,13 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
                 ? t('Aflys bookingen for %s fra %s til %s', $booking->bookingName, $slot['start'], $slot['end'])
                 : t('Book tiden fra %s til %s', $slot['start'], $slot['end']);
             ?>
+            <?php
+            $slotStateClass = $isPast ? 'day-slot-past' : ($booking !== null ? 'day-slot-booked' : 'day-slot-available');
+            ?>
             <?php if ($isPast): ?>
-                <article class="day-slot" role="listitem">
+                <article class="day-slot <?= e($slotStateClass) ?>" role="listitem">
             <?php else: ?>
-                <a class="day-slot day-slot-clickable" role="listitem" href="<?= e($slotUrl) ?>" aria-label="<?= e($slotAriaLabel) ?>">
+                <a class="day-slot day-slot-clickable <?= e($slotStateClass) ?>" role="listitem" href="<?= e($slotUrl) ?>" aria-label="<?= e($slotAriaLabel) ?>">
             <?php endif; ?>
                 <div class="day-slot-time">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
@@ -273,11 +276,11 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar');
                 <h2><?= e($weatherForecast['isGoodDryingWeather'] ? t('Godt tørrevejr') : t('Tørrevejret')) ?> <?= e($weatherForecast['period']) ?></h2>
                 <p><?= e($weatherForecast['recommendation']) ?></p>
                 <div class="weather-meta">
-                    <span><?= e($weatherForecast['location']) ?></span>
-                    <span><?= (int) $weatherForecast['temperature'] ?>&deg;C</span>
-                    <span><?= e(t('%d%% regn', (int) $weatherForecast['rainProbability'])) ?></span>
-                    <span><?= e(t('%d km/t vind', (int) $weatherForecast['windSpeed'])) ?></span>
-                    <span><?= e(t('Vejrdata fra Open-Meteo')) ?></span>
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s5 6 5 11a5 5 0 0 1-10 0c0-5 5-11 5-11Z"></path></svg><?= e($weatherForecast['location']) ?></span>
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg><?= (int) $weatherForecast['temperature'] ?>&deg;C</span>
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17a4 4 0 1 1 1-7.9A6 6 0 0 1 19 12a3 3 0 0 1-1 5H7ZM9 20l-1 2M14 20l-1 2"></path></svg><?= e(t('%d%% regn', (int) $weatherForecast['rainProbability'])) ?></span>
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h10c3 0 3-4 0-4M3 12h15c4 0 4 5 0 5M3 16h8"></path></svg><?= e(t('%d km/t vind', (int) $weatherForecast['windSpeed'])) ?></span>
+                    <span class="weather-source"><?= e(t('Vejrdata fra Open-Meteo')) ?></span>
                 </div>
             <?php else: ?>
                 <h2><?= e(t('Dagens vasketip')) ?></h2>
