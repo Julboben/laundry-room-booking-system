@@ -130,8 +130,31 @@ function prefetchNeighbourDays() {
     }
 }
 
+const DAY_SLIDE_PX = 32;
+const DAY_SLIDE_MS = 320;
+const DAY_SLIDE_EASING = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+let latestDayRequest = 0;
+
+// Animates the real elements rather than using a view transition, which would block taps until it ends.
+function slideInDay(section, direction) {
+    if (typeof section.animate !== 'function' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    const offset = direction === 'back' ? -DAY_SLIDE_PX : DAY_SLIDE_PX;
+    const parts = [[section.querySelector('.day-title'), 0], [section.querySelector('.day-slots'), 40]];
+
+    for (const [element, delay] of parts) {
+        element?.animate(
+            [{ opacity: 0, transform: `translateX(${offset}px)` }, { opacity: 1, transform: 'none' }],
+            { duration: DAY_SLIDE_MS, delay, easing: DAY_SLIDE_EASING, fill: 'backwards' },
+        );
+    }
+}
+
 async function showDay(href, { push = true } = {}) {
-    const current = document.querySelector('.daily-calendar');
+    const request = ++latestDayRequest;
     let html;
 
     try {
@@ -140,6 +163,13 @@ async function showDay(href, { push = true } = {}) {
         window.location.assign(href);
         return;
     }
+
+    // A later tap won while this day was loading.
+    if (request !== latestDayRequest) {
+        return;
+    }
+
+    const current = document.querySelector('.daily-calendar');
 
     const page = new DOMParser().parseFromString(html, 'text/html');
     const next = page.querySelector('.daily-calendar');
@@ -150,8 +180,13 @@ async function showDay(href, { push = true } = {}) {
     }
 
     const hadFocus = current.contains(document.activeElement);
+    const direction = (next.dataset.date ?? '') < (current.dataset.date ?? '') ? 'back' : 'forward';
     document.querySelector('dialog[open]')?.close();
+
+    // The slide replaces the cards' own entrance animation, which would otherwise play as well.
+    next.classList.add('is-swapped');
     current.replaceWith(document.adoptNode(next));
+    slideInDay(next, direction);
 
     const languageSwitch = page.querySelector('.language-switch');
     if (languageSwitch) {
@@ -188,10 +223,18 @@ function initDayNavigation() {
 
         const url = new URL(link.href);
 
-        if (isCalendarUrl(url)) {
-            event.preventDefault();
-            showDay(url.href);
+        if (!isCalendarUrl(url)) {
+            return;
         }
+
+        event.preventDefault();
+
+        if (url.searchParams.get('date') === document.querySelector('.daily-calendar')?.dataset.date) {
+            document.querySelector('dialog[open]')?.close();
+            return;
+        }
+
+        showDay(url.href);
     });
 
     window.addEventListener('popstate', () => {

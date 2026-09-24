@@ -142,6 +142,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
 <section
     class="daily-calendar"
     aria-labelledby="day-heading"
+    data-date="<?= e($dateString) ?>"
     data-swipe-area
     <?php if ($previousDate !== null): ?>data-previous-url="<?= e($calendarUrl($previousDate)) ?>"<?php endif; ?>
     <?php if ($nextDate !== null): ?>data-next-url="<?= e($calendarUrl($nextDate)) ?>"<?php endif; ?>

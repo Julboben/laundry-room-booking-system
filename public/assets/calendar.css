@@ -137,6 +137,7 @@
             color: var(--color-on-action);
             background: var(--color-action);
             box-shadow: 0 6px 16px color-mix(in oklch, var(--color-action) 28%, transparent);
+            cursor: default;
 
             & .dot {
                 background: color-mix(in oklch, var(--color-on-action) 35%, transparent);
@@ -212,6 +213,10 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: var(--space-3);
         list-style: none;
+    }
+
+    .is-swapped .slot {
+        animation: none;
     }
 
     .slot {
@@ -560,6 +565,7 @@
             border-color: var(--color-action);
             color: var(--color-on-action);
             background: var(--color-action);
+            cursor: default;
 
             & .dot {
                 background: color-mix(in oklch, var(--color-on-action) 35%, transparent);
