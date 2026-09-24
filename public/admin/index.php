@@ -48,11 +48,11 @@ try {
 layout_start('Administration');
 ?>
 <section class="card">
-    <h2><?= e(t('Administration')) ?></h2>
+    <h1><?= e(t('Administration')) ?></h1>
     <nav class="admin-nav">
         <a href="/admin/bookings.php"><?= e(t('Bookinger')) ?></a>
         <a href="/admin/settings.php"><?= e(t('Indstillinger')) ?></a>
-        <a href="/admin/logs.php"><?= e(t('Logs')) ?></a>
+        <a href="/admin/logs.php"><?= e(t('Aktivitetslog')) ?></a>
         <a href="/admin/export.php"><?= e(t('Eksport (CSV)')) ?></a>
         <a href="/admin/logout.php"><?= e(t('Log ud')) ?></a>
     </nav>
@@ -68,7 +68,7 @@ layout_start('Administration');
         <dd><?= $bookingsNext7Days ?></dd>
 
         <dt><?= e(t('Seneste oprydning')) ?></dt>
-        <dd><?= $lastCleanup !== false ? e((string) $lastCleanup) : e(t('Ukendt')) ?></dd>
+        <dd><?= $lastCleanup !== false ? e(short_datetime((string) $lastCleanup)) : e(t('Ukendt')) ?></dd>
 
         <dt><?= e(t('PHP-version')) ?></dt>
         <dd><?= e(PHP_VERSION) ?></dd>

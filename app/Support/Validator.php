@@ -52,7 +52,7 @@ final class Validator
         $trimmed = trim($name);
 
         if ($trimmed === '') {
-            return I18n::translate('Skriv et navn.');
+            return I18n::translate('Skriv dit navn.');
         }
 
         if (mb_strlen($trimmed) < 2) {
@@ -60,7 +60,7 @@ final class Validator
         }
 
         if (mb_strlen($trimmed) > 100) {
-            return I18n::translate('Navnet må højst være 100 tegn.');
+            return I18n::translate('Navnet må højst være på 100 tegn.');
         }
 
         return null;
@@ -87,7 +87,7 @@ final class Validator
     public static function validateSlotKey(string $slotKey): ?string
     {
         if (!array_key_exists($slotKey, \LaundryBooking\Services\BookingService::slots())) {
-            return I18n::translate('Tiden er ikke gyldig.');
+            return I18n::translate('Tidspunktet er ugyldigt.');
         }
 
         return null;

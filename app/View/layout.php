@@ -8,16 +8,22 @@ use function LaundryBooking\Support\t;
 
 require_once __DIR__ . '/helpers.php';
 
-/**
- * Renders the opening HTML shell shared by all resident-facing pages.
- */
-function layout_start(string $title, bool $showNav = true, string $bodyClass = ''): void
+function asset_url(string $path): string
 {
-    $assetDirectory = dirname(__DIR__, 2) . '/public/assets';
-    $appCssVersion = (string) (filemtime($assetDirectory . '/app.css') ?: 1);
-    $kioskCssVersion = (string) (filemtime($assetDirectory . '/kiosk.css') ?: 1);
-    $calendarCssVersion = (string) (filemtime($assetDirectory . '/calendar.css') ?: 1);
-    $appJsVersion = (string) (filemtime($assetDirectory . '/app.js') ?: 1);
+    $file = dirname(__DIR__, 2) . '/public' . $path;
+
+    return $path . '?v=' . (string) (is_file($file) ? filemtime($file) : 1);
+}
+
+/**
+ * Renders the opening HTML shell shared by all pages.
+ *
+ * @param array<string,string> $bodyData data-* attributes for the body, without the "data-" prefix
+ */
+function layout_start(string $title, bool $showNav = true, string $bodyClass = '', array $bodyData = []): void
+{
+    $isKiosk = str_contains($bodyClass, 'page-kiosk');
+    $isCalendar = str_contains($bodyClass, 'page-calendar');
     $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     $requestPath = is_string($requestPath) ? $requestPath : '/';
     $languageQuery = $_GET;
@@ -25,35 +31,39 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
     $danishUrl = $requestPath . '?' . http_build_query($languageQuery);
     $languageQuery['lang'] = 'en';
     $englishUrl = $requestPath . '?' . http_build_query($languageQuery);
+    $bodyAttributes = '';
+    foreach ($bodyData as $name => $value) {
+        $bodyAttributes .= ' data-' . e($name) . '="' . e($value) . '"';
+    }
     ?><!DOCTYPE html>
 <html lang="<?= e(current_locale()) ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title><?= e(t($title)) ?> – <?= e(t('Vaskekalender')) ?></title>
-    <link rel="stylesheet" href="/assets/app.css?v=<?= e($appCssVersion) ?>">
-<?php if (str_contains($bodyClass, 'page-kiosk')): ?>
-    <link rel="stylesheet" href="/assets/kiosk.css?v=<?= e($kioskCssVersion) ?>">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#faf9f4">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="<?= e(t('Vaskekalender')) ?>">
+    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="stylesheet" href="<?= e(asset_url('/assets/app.css')) ?>">
+<?php if ($isKiosk): ?>
+    <link rel="stylesheet" href="<?= e(asset_url('/assets/kiosk.css')) ?>">
 <?php endif; ?>
-<?php if (str_contains($bodyClass, 'page-calendar')): ?>
-    <link rel="stylesheet" href="/assets/calendar.css?v=<?= e($calendarCssVersion) ?>">
+<?php if ($isCalendar): ?>
+    <link rel="stylesheet" href="<?= e(asset_url('/assets/calendar.css')) ?>">
 <?php endif; ?>
-    <script src="/assets/app.js?v=<?= e($appJsVersion) ?>" defer></script>
+    <script type="module" src="<?= e(asset_url('/assets/app.js')) ?>"></script>
 </head>
-<body class="<?= e($bodyClass) ?>">
+<body class="<?= e($bodyClass) ?>"<?= $bodyAttributes ?>>
+<?php include __DIR__ . '/partials/icons.php'; ?>
 <header class="site-header">
     <div class="header-inner">
         <a class="brand" href="/calendar.php" aria-label="<?= e(t('Vaskekalender – gå til kalenderen')) ?>">
-            <span class="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 48 48" role="img">
-                    <rect x="10" y="5" width="28" height="38" rx="4"></rect>
-                    <path d="M10 14h28"></path>
-                    <circle cx="24" cy="28" r="9"></circle>
-                    <circle cx="24" cy="28" r="6"></circle>
-                    <circle cx="16" cy="10" r="1"></circle>
-                    <path d="M30 10h3"></path>
-                </svg>
-            </span>
+            <span class="brand-mark" aria-hidden="true"><?= icon('washer') ?></span>
             <span class="brand-copy">
                 <span class="brand-title"><?= e(t('Vaskekalender')) ?></span>
                 <span class="brand-subtitle"><?= e(t('Book en tid i vaskerummet')) ?></span>
@@ -63,22 +73,22 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
             <nav class="language-switch" aria-label="Language / Sprog">
 <?php if (current_locale() === 'da'): ?>
                 <span class="language-option is-current" lang="da" aria-current="true">DA</span>
-                <span class="language-separator" aria-hidden="true">/</span>
-                <a class="language-option" href="<?= e($englishUrl) ?>" lang="en">EN</a>
+                <a class="language-option" href="<?= e($englishUrl) ?>" lang="en" hreflang="en">EN</a>
 <?php else: ?>
-                <a class="language-option" href="<?= e($danishUrl) ?>" lang="da">DA</a>
-                <span class="language-separator" aria-hidden="true">/</span>
+                <a class="language-option" href="<?= e($danishUrl) ?>" lang="da" hreflang="da">DA</a>
                 <span class="language-option is-current" lang="en" aria-current="true">EN</span>
 <?php endif; ?>
             </nav>
 <?php if ($showNav): ?>
             <nav class="site-nav" aria-label="<?= e(t('Primær navigation')) ?>">
-                <a class="nav-calendar" href="/calendar.php">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v3M18 2v3M3 9h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path></svg>
+<?php if (!$isCalendar): ?>
+                <a class="nav-link nav-calendar" href="/calendar.php">
+                    <?= icon('calendar') ?>
                     <span><?= e(t('Kalender')) ?></span>
                 </a>
-                <a class="nav-logout" href="/logout.php">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"></path></svg>
+<?php endif; ?>
+                <a class="nav-link nav-logout" href="/logout.php" aria-label="<?= e(t('Log ud')) ?>">
+                    <?= icon('logout') ?>
                     <span><?= e(t('Log ud')) ?></span>
                 </a>
             </nav>
@@ -101,7 +111,7 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
 }
 
 /**
- * Renders the closing HTML shared by all resident-facing pages.
+ * Renders the closing HTML shared by all pages.
  */
 function layout_end(): void
 {

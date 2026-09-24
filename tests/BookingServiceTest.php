@@ -21,6 +21,8 @@ final class BookingServiceTest extends TestCase
 
     private BookingService $bookingService;
 
+    private Setting $settings;
+
     protected function setUp(): void
     {
         Env::load(__DIR__ . '/../.env');
@@ -35,11 +37,12 @@ final class BookingServiceTest extends TestCase
         $this->pdo->exec('TRUNCATE TABLE activity_logs');
         $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
-        $settings = new Setting($this->pdo);
-        $settings->set('booking_weeks_ahead', '8');
-        $settings->set('cancellation_code_length', '4');
+        $this->settings = new Setting($this->pdo);
+        $this->settings->set('booking_weeks_ahead', '8');
+        $this->settings->set('cancellation_code_length', '4');
+        $this->settings->set('late_booking_minutes', '120');
 
-        $settingsService = new SettingsService($settings);
+        $settingsService = new SettingsService($this->settings);
         $this->bookingService = new BookingService(
             $this->pdo,
             new CodeService(),
@@ -68,7 +71,7 @@ final class BookingServiceTest extends TestCase
     public function testInvalidSlotIsRejected(): void
     {
         $error = $this->bookingService->validateDateAndSlot($this->futureDate(), 'not-a-slot');
-        $this->assertSame('Tiden er ikke gyldig.', $error);
+        $this->assertSame('Tidspunktet er ugyldigt.', $error);
     }
 
     public function testPastDateIsRejected(): void
@@ -82,7 +85,34 @@ final class BookingServiceTest extends TestCase
     {
         $farDate = DateHelper::today()->modify('+20 weeks')->format('Y-m-d');
         $error = $this->bookingService->validateDateAndSlot($farDate, '07-10');
-        $this->assertSame('Datoen ligger for langt ude i fremtiden.', $error);
+        $this->assertSame('Du kan højst booke 8 uger frem.', $error);
+    }
+
+    public function testStartedSlotCanBeBookedInsideLateBookingWindow(): void
+    {
+        $date = $this->futureDate();
+        $now = DateHelper::fromDateString($date . ' 08:30');
+
+        $this->assertNull($this->bookingService->validateDateAndSlot($date, '07-10', $now));
+    }
+
+    public function testStartedSlotIsRejectedAfterLateBookingWindow(): void
+    {
+        $date = $this->futureDate();
+        $now = DateHelper::fromDateString($date . ' 09:00');
+
+        $error = $this->bookingService->validateDateAndSlot($date, '07-10', $now);
+        $this->assertSame('Tiden kan ikke længere bookes.', $error);
+    }
+
+    public function testZeroLateBookingMinutesRejectsStartedSlot(): void
+    {
+        $this->settings->set('late_booking_minutes', '0');
+        $date = $this->futureDate();
+        $now = DateHelper::fromDateString($date . ' 07:01');
+
+        $error = $this->bookingService->validateDateAndSlot($date, '07-10', $now);
+        $this->assertSame('Tiden kan ikke længere bookes.', $error);
     }
 
     public function testCreateBookingSucceeds(): void

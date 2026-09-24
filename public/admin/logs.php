@@ -33,8 +33,8 @@ $logs = $activityLog->recent(200);
 layout_start('Aktivitetslog');
 ?>
 <section class="card">
-    <h2><?= e(t('Aktivitetslog')) ?></h2>
-    <p><a href="/admin/index.php"><?= e(t('« Tilbage til administration')) ?></a></p>
+    <h1><?= e(t('Aktivitetslog')) ?></h1>
+    <a class="back-link" href="/admin/index.php"><?= icon('chevron-left') ?><?= e(t('Tilbage til administration')) ?></a>
 
     <table class="bookings-table">
         <thead>
@@ -50,7 +50,7 @@ layout_start('Aktivitetslog');
         <tbody>
         <?php foreach ($logs as $log): ?>
             <tr>
-                <td><?= e((string) $log['created_at']) ?></td>
+                <td><?= e(short_datetime((string) $log['created_at'])) ?></td>
                 <td><?= e(t((string) $log['actor_type'])) ?></td>
                 <td><?= e(t((string) $log['action'])) ?></td>
                 <td><?= $log['booking_id'] !== null ? (int) $log['booking_id'] : '' ?></td>

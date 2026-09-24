@@ -21,15 +21,21 @@ WebSockets are required.
 - Touch-first single-day calendar with previous/next controls, an in-app date
   picker that previews remaining availability, and four fixed slots:
   `07:00–10:00`, `10:00–13:00`, `13:00–16:00`, `16:00–19:00`.
-- After the final slot begins, the resident calendar automatically starts on
+- A week strip with availability dots, swipe between days, and slot states
+  for free, free now, booked, in progress, closed, and past.
+- Free slots can still be booked after they start, up to a configurable
+  number of minutes (default 120, max 180, never past the slot end). Once
+  the last slot of the day can no longer be booked, the calendar starts on
   the following day.
+- Kiosk behaviour: the calendar reloads itself when a slot changes state, and
+  booking/cancellation screens return to the calendar after inactivity.
 - Booking with a required name that is shown on the reserved calendar slot.
 - A configurable 4–8 digit cancellation code per booking, shown once
   and stored only as a `password_hash()`; cancellation attempts are rate-limited.
 - A postcode-based outdoor drying forecast powered by Open-Meteo, with
   a cached fallback that never blocks the booking flow.
-- Manual 30-minute takeover rule (displayed, never enforced
-  automatically).
+- Manual takeover rule (default 30 minutes after the start, or after the
+  booking time if booked late; displayed, never enforced automatically).
 - Separate admin authentication with its own session, rate limiting,
   dashboard, booking management, CSV export, settings, and activity
   log.
@@ -68,15 +74,21 @@ to `1352` (København K).
 
 - Danish postcode coordinates come from Dataforsyningen.
 - Forecast data comes from Open-Meteo and requires no API key.
-- Requests are made server-side and cached for 30 minutes.
-- After 18:00, the panel shows tomorrow's drying conditions.
-- A cached response is used during short outages; otherwise the panel falls
-  back to a local laundry tip so booking remains fully functional.
+- Requests are made server-side. The forecast is cached in the `settings`
+  table, so every web and cron container shares it.
+- `scripts/refresh_weather.php` refreshes the cache every 30 minutes (the
+  Railway `weather` cron service). Page loads only call the API themselves
+  if the cache is older than two hours, so they rarely wait on it.
+- Cached data up to six hours old is used during outages; otherwise the panel
+  falls back to a local laundry tip so booking remains fully functional.
+- After 18:00, the panel shows tomorrow's drying conditions. Wind is shown
+  in m/s.
 - Weather attribution is displayed as text rather than a link to prevent users
   from leaving the kiosk application.
 
-The decorative footer artwork is loaded from
-`public/assets/laundry-footer.png`.
+Icons come from an inline SVG sprite (`app/View/partials/icons.php`), and the
+clothesline illustration (`app/View/partials/illustration.php`) is inline SVG
+that changes with the weather.
 
 ## Requirements
 
@@ -129,7 +141,9 @@ composer install
 composer test
 ```
 
-`tests/CodeServiceTest.php` runs without a database. Tests in
+`tests/CodeServiceTest.php`, `tests/SlotStatusTest.php`,
+`tests/BookingTakeoverTest.php`, and `tests/I18nTest.php` run without a
+database. Tests in
 `tests/BookingServiceTest.php` require a working database connection
 configured through `.env` (they are skipped automatically if
 `DB_DATABASE` is not set) and truncate the `bookings` and
@@ -164,8 +178,7 @@ the component when it is not reusable.
 See `app/`, `public/`, `scripts/`, and `tests/` for the application code,
 web-accessible entry points, operational scripts, and automated tests
 respectively. Only `public/` is meant to be exposed by the web server; the
-document root must be set to `public/`. Runtime weather responses are stored
-under `storage/cache/` and are excluded from Git.
+document root must be set to `public/`.
 
 ## Admin panel
 
@@ -176,8 +189,9 @@ can:
 - View dashboard counts and system status (`/admin/index.php`).
 - Filter, search, and delete bookings (`/admin/bookings.php`).
 - Export all bookings as CSV (`/admin/export.php`).
-- Change the booking window, calendar message, weather postcode,
-  cancellation-code length, and shared property code (`/admin/settings.php`).
+- Change the booking window, how long after the start a free slot can
+  still be booked, calendar message, weather postcode, cancellation-code
+  length, and shared property code (4–8 digits) (`/admin/settings.php`).
 - Review the activity log (`/admin/logs.php`).
 
 Do not use the shared kiosk tablet for admin access.
@@ -189,6 +203,8 @@ Do not use the shared kiosk tablet for admin access.
 - `scripts/cleanup_old_bookings.php` — deletes bookings and activity
   logs older than `OLD_BOOKING_RETENTION_DAYS` (default 180 days).
   Schedule this with a cron job or the host's scheduled-tasks feature.
+- `scripts/refresh_weather.php` — refreshes the cached drying forecast.
+  Schedule it every 30 minutes.
 - `scripts/backup_db.php` — dumps the database to a timestamped file
   in `storage/backups/` using `mysqldump` and prunes backups older
   than `BACKUP_RETENTION_DAYS` (default 30 days). If `mysqldump` is
@@ -200,7 +216,8 @@ Do not use the shared kiosk tablet for admin access.
 
 Railway is the recommended production host. The
 `.railway/railway.ts` Infrastructure as Code definition creates the
-web service, private MySQL database, and daily cleanup job in Railway's
+web service, private MySQL database, daily cleanup job, and 30-minute
+weather refresh job in Railway's
 EU region. Railway detects PHP and serves it with FrankenPHP. The
 committed `Caddyfile` restricts the document root to `public/`, so
 application code and operational scripts are not web accessible.

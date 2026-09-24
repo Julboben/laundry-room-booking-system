@@ -10,12 +10,13 @@ use LaundryBooking\Database\Connection;
 use LaundryBooking\Http\Request;
 use LaundryBooking\Http\Response;
 use LaundryBooking\Models\Setting;
-use LaundryBooking\Services\BookingService;
 use LaundryBooking\Services\SettingsService;
 use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
 use function LaundryBooking\Support\t;
+
+const SUCCESS_IDLE_SECONDS = 60;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -44,26 +45,31 @@ if ($booking === false) {
     Response::redirect('/calendar.php');
 }
 
-layout_start('Booking oprettet', bodyClass: 'page-kiosk page-success');
+$calendarUrl = '/calendar.php?date=' . rawurlencode($booking['booking_date']);
+
+layout_start('Booking oprettet', bodyClass: 'page-kiosk page-success', bodyData: [
+    'idle-return' => $calendarUrl,
+    'idle-seconds' => (string) SUCCESS_IDLE_SECONDS,
+]);
 ?>
-<section class="card kiosk-card success-card">
-    <h2><?= e(t('Din booking er oprettet.')) ?></h2>
-    <p>
-        <?= e(danish_date_long(DateHelper::fromDateString($booking['booking_date']))) ?>,
-        <?= e(substr($booking['start_time'], 0, 5)) ?>&ndash;<?= e(substr($booking['end_time'], 0, 5)) ?>
+<section class="card kiosk-card success-card" aria-labelledby="page-heading">
+    <?= illustration('clear', 'card-illustration') ?>
+    <h1 id="page-heading"><?= e(t('Din tid er booket')) ?></h1>
+    <p class="success-details">
+        <strong><?= e(ucfirst(danish_date_long(DateHelper::fromDateString($booking['booking_date'])))) ?></strong>
+        <span><?= e(t('Kl. %s', clock_range($booking['start_time'], $booking['end_time']))) ?> · <?= e($booking['booking_name']) ?></span>
     </p>
-    <p><?= e(t('Navn:')) ?> <?= e($booking['booking_name']) ?></p>
 
     <div class="cancellation-code">
-        <p><?= e(t('Din aflysningskode:')) ?></p>
-        <p class="code"><?= e($sessionData['code']) ?></p>
+        <p id="code-label"><?= e(t('Din aflysningskode')) ?></p>
+        <p class="code" aria-labelledby="code-label"><?= e($sessionData['code']) ?></p>
+        <p class="code-hint"><?= icon('info') ?><span><?= e(t('Tag et billede af koden eller skriv den ned – den bliver ikke vist igen.')) ?></span></p>
     </div>
 
-    <p class="alert alert-warning">
-        <?= e(t('Gem denne aflysningskode. Du skal bruge den, hvis du vil aflyse bookingen.')) ?>
-    </p>
-
-    <p><a class="btn btn-primary" href="/calendar.php?date=<?= e($booking['booking_date']) ?>"><?= e(t('Tilbage til kalenderen')) ?></a></p>
+    <div class="form-actions">
+        <a class="btn btn-primary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage til kalenderen')) ?></a>
+    </div>
+    <p class="idle-countdown" data-idle-countdown="<?= e(t('Går tilbage til kalenderen om %d sek.')) ?>" hidden></p>
 </section>
 <?php
 layout_end();

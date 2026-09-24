@@ -20,6 +20,7 @@ use LaundryBooking\Support\DateHelper;
 
 use function LaundryBooking\Support\e;
 use function LaundryBooking\Support\t;
+use function LaundryBooking\Support\tn;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -49,7 +50,7 @@ $bookingSubject = (string) $id;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
+        $error = t('Sikkerhedstjekket mislykkedes. Prøv igen.');
     } elseif (
         $rateLimiter->isLocked('cancel_client', $clientSubject)
         || $rateLimiter->isLocked('cancel_booking', $bookingSubject)
@@ -59,7 +60,7 @@ if (Request::isPost()) {
             $rateLimiter->remainingSeconds('cancel_booking', $bookingSubject)
         );
         $minutes = (int) ceil($remainingSeconds / 60);
-        $error = t('For mange forsøg. Prøv igen om ca. %d minutter.', $minutes);
+        $error = tn($minutes, 'For mange forsøg. Prøv igen om ca. %d minut.', 'For mange forsøg. Prøv igen om ca. %d minutter.');
     } else {
         $code = Request::post('cancellation_code', '') ?? '';
 
@@ -93,29 +94,33 @@ if (Request::isPost()) {
 $booking = $id > 0 ? $bookingService->find($id) : null;
 $codeLength = $settingsService->getCancellationCodeLength();
 
-layout_start('Aflys booking', bodyClass: 'page-kiosk page-cancel');
+layout_start('Aflys booking', bodyClass: 'page-kiosk page-cancel', bodyData: ['idle-return' => $calendarUrl]);
 ?>
-<section class="card kiosk-card cancel-card">
-    <h2><?= e(t('Aflys booking')) ?></h2>
+<section class="card kiosk-card cancel-card" aria-labelledby="page-heading">
+    <h1 id="page-heading"><?= e(t('Aflys booking')) ?></h1>
 
     <?php if ($cancelled): ?>
-        <p class="alert alert-success" role="status"><?= e(t('Bookingen er blevet fjernet.')) ?></p>
-        <p><a class="btn btn-primary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage til kalenderen')) ?></a></p>
+        <p class="alert alert-success" role="status"><?= e(t('Din booking er aflyst.')) ?></p>
+        <div class="form-actions">
+            <a class="btn btn-primary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage til kalenderen')) ?></a>
+        </div>
     <?php elseif ($booking === null): ?>
-        <p class="alert alert-error" role="alert"><?= e(t('Bookingen findes ikke.')) ?></p>
-        <p><a class="btn btn-secondary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage')) ?></a></p>
+        <p class="alert alert-error" role="alert"><?= e(t('Bookingen findes ikke længere.')) ?></p>
+        <div class="form-actions">
+            <a class="btn btn-primary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage til kalenderen')) ?></a>
+        </div>
     <?php else: ?>
         <?php if ($error !== null): ?>
             <p class="alert alert-error" role="alert"><?= e($error) ?></p>
         <?php endif; ?>
 
-        <p>
-            <?= e(danish_date_long(DateHelper::fromDateString($booking['booking_date']))) ?>,
-            <?= e(substr($booking['start_time'], 0, 5)) ?>&ndash;<?= e(substr($booking['end_time'], 0, 5)) ?>
-        </p>
-        <p><?= e(t('Navn:')) ?> <?= e($booking['booking_name']) ?></p>
-
-        <p><?= e(t('Bookingen bliver fjernet, hvis koden er korrekt.')) ?></p>
+        <div class="booking-summary is-booked">
+            <span class="booking-summary-icon" aria-hidden="true"><?= icon('user') ?></span>
+            <div>
+                <strong><?= e($booking['booking_name']) ?></strong>
+                <span><?= e(ucfirst(danish_date_long(DateHelper::fromDateString($booking['booking_date'])))) ?>, <?= e(t('kl. %s', clock_range($booking['start_time'], $booking['end_time']))) ?></span>
+            </div>
+        </div>
 
         <form method="post" action="/cancel.php?id=<?= (int) $id ?>" novalidate>
             <?= Csrf::field() ?>
@@ -126,16 +131,22 @@ layout_start('Aflys booking', bodyClass: 'page-kiosk page-cancel');
                 type="text"
                 id="cancellation_code"
                 name="cancellation_code"
+                class="code-input"
                 inputmode="numeric"
-                autocomplete="one-time-code"
+                autocomplete="off"
+                enterkeyhint="done"
                 placeholder="<?= e(t('%d cifre', $codeLength)) ?>"
                 pattern="\d{<?= (int) $codeLength ?>}"
                 minlength="<?= (int) $codeLength ?>"
                 maxlength="<?= (int) $codeLength ?>"
+                aria-describedby="code-help"
                 required
             >
-            <button type="submit" class="btn btn-primary"><?= e(t('Aflys booking')) ?></button>
-            <a class="btn btn-secondary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage')) ?></a>
+            <small class="form-hint" id="code-help"><?= e(t('Indtast den aflysningskode, du fik, da du bookede tiden.')) ?></small>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger"><?= e(t('Aflys booking')) ?></button>
+                <a class="btn btn-secondary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage')) ?></a>
+            </div>
         </form>
     <?php endif; ?>
 </section>
