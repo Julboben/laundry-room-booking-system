@@ -256,7 +256,6 @@
         background: color-mix(in oklch, var(--color-surface) 82%, transparent);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        view-transition-name: site-header;
     }
 
     .header-inner,
@@ -628,8 +627,7 @@
         border-radius: var(--radius-lg);
         background: linear-gradient(145deg, var(--green-50), var(--green-100));
 
-        & strong,
-        & span {
+        & div > * {
             display: block;
         }
 

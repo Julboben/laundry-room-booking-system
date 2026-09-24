@@ -233,19 +233,29 @@ final class WeatherService
             'isGoodDryingWeather' => $isGoodDryingWeather,
             'variant' => $isGoodDryingWeather ? 'clear' : ($isRainy ? 'rain' : 'mixed'),
             'recommendation' => I18n::translate(
-                $this->recommendation($isGoodDryingWeather, $isRainy, $temperature, $windSpeed)
+                $this->recommendation($isGoodDryingWeather, $isRainy, $rainProbability, $precipitation, $temperature, $windSpeed)
             ),
         ];
     }
 
-    private function recommendation(bool $isGoodDryingWeather, bool $isRainy, int $temperature, int $windSpeed): string
-    {
+    private function recommendation(
+        bool $isGoodDryingWeather,
+        bool $isRainy,
+        int $rainProbability,
+        float $precipitation,
+        int $temperature,
+        int $windSpeed,
+    ): string {
         if ($isGoodDryingWeather) {
             return 'Det ser lovende ud til udendørs tørring – måske kan tørretumbleren få en fridag.';
         }
 
+        if ($rainProbability >= 80 || $precipitation >= 2.0) {
+            return 'Der er meldt regn. Tørretumbleren eller et tørrestativ indendørs er det sikre valg.';
+        }
+
         if ($isRainy) {
-            return 'Der er risiko for regn, så hold øje med tøjet eller tør det indendørs.';
+            return 'Der kan komme byger. Hænger du tøjet ud, så hold øje med himlen.';
         }
 
         if ($windSpeed > self::MAX_GOOD_WIND_SPEED) {

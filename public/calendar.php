@@ -99,16 +99,8 @@ $dayEyebrow = match (true) {
 };
 
 $weekdayShort = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
-$stripLength = 7;
-$stripStart = $selectedDate->modify('-3 days');
-if ($stripStart < $firstBookableDate) {
-    $stripStart = $firstBookableDate;
-}
-$stripEnd = $stripStart->modify('+' . ($stripLength - 1) . ' days');
-if ($stripEnd > $latestDate) {
-    $stripEnd = $latestDate;
-    $stripStart = max($firstBookableDate, $stripEnd->modify('-' . ($stripLength - 1) . ' days'));
-}
+$stripStart = $selectedDate->modify('-' . ((int) $selectedDate->format('N') - 1) . ' days');
+$stripEnd = $stripStart->modify('+6 days');
 
 $calendarMonths = [];
 for ($monthCursor = $firstBookableDate->modify('first day of this month'); $monthCursor <= $latestDate; $monthCursor = $monthCursor->modify('+1 month')) {
@@ -163,11 +155,12 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
             <?php if (!$isToday && $firstBookableDate == $today): ?>
                 <a class="btn btn-secondary" href="<?= e($calendarUrl($today)) ?>"><?= e(t('I dag')) ?></a>
             <?php endif; ?>
-            <button class="btn btn-secondary calendar-trigger" type="button" data-calendar-open aria-haspopup="dialog" hidden>
+            <button class="btn btn-secondary calendar-trigger" type="button" data-calendar-open aria-haspopup="dialog">
                 <?= icon('calendar') ?>
                 <span><?= e(t('Vælg dato')) ?></span>
             </button>
-            <form class="date-picker" method="get" action="/calendar.php" data-date-picker>
+            <noscript>
+            <form class="date-picker" method="get" action="/calendar.php">
                 <label class="visually-hidden" for="calendar_date"><?= e(t('Vælg dato')) ?></label>
                 <input
                     type="date"
@@ -179,6 +172,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
                 >
                 <button class="btn btn-secondary" type="submit"><?= e(t('Vis')) ?></button>
             </form>
+            </noscript>
         </div>
     </header>
 
@@ -193,25 +187,35 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
                 <?php
                 $stripDateString = $stripDate->format('Y-m-d');
                 $isSelected = $stripDateString === $dateString;
-                $stripBookable = $bookableByDate[$stripDateString] ?? [];
-                $chipClasses = 'day-chip'
-                    . ($isSelected ? ' is-selected' : '')
-                    . ($stripDate == $today ? ' is-today' : '')
-                    . (!in_array(true, $stripBookable, true) ? ' is-full' : '');
+                $stripBookable = $bookableByDate[$stripDateString] ?? null;
+                $weekdayLabel = t($weekdayShort[(int) $stripDate->format('N') - 1]);
                 ?>
                 <li>
+                <?php if ($stripBookable === null): ?>
+                    <span class="day-chip is-outside" aria-hidden="true">
+                        <span class="day-chip-weekday"><?= e($weekdayLabel) ?></span>
+                        <span class="day-chip-date"><?= (int) $stripDate->format('j') ?></span>
+                    </span>
+                <?php else: ?>
+                    <?php
+                    $chipClasses = 'day-chip'
+                        . ($isSelected ? ' is-selected' : '')
+                        . ($stripDate == $today ? ' is-today' : '')
+                        . (!in_array(true, $stripBookable, true) ? ' is-full' : '');
+                    ?>
                     <a
                         class="<?= e($chipClasses) ?>"
                         href="<?= e($calendarUrl($stripDate)) ?>"
                         aria-label="<?= e(danish_date_long($stripDate) . ', ' . $availabilityLabel($stripDateString)) ?>"
                         <?= $isSelected ? 'aria-current="date"' : '' ?>
                     >
-                        <span class="day-chip-weekday"><?= e(t($weekdayShort[(int) $stripDate->format('N') - 1])) ?></span>
+                        <span class="day-chip-weekday"><?= e($weekdayLabel) ?></span>
                         <span class="day-chip-date"><?= (int) $stripDate->format('j') ?></span>
                         <span class="availability-dots" aria-hidden="true">
                             <?php foreach ($stripBookable as $isFree): ?><span class="dot<?= $isFree ? ' is-free' : '' ?>"></span><?php endforeach; ?>
                         </span>
                     </a>
+                <?php endif; ?>
                 </li>
             <?php endfor; ?>
         </ol>
@@ -292,7 +296,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
         <span class="weather-icon" aria-hidden="true"><?= icon($weatherIcon) ?></span>
         <div class="weather-copy">
             <?php if ($weatherForecast !== null): ?>
-                <h2 id="weather-heading"><?= e($weatherForecast['isGoodDryingWeather'] ? t('Godt tørrevejr') : t('Tørrevejr')) ?> <?= e($weatherForecast['period']) ?></h2>
+                <h2 id="weather-heading"><?= e(match ($weatherVariant) { 'clear' => t('Godt tørrevejr'), 'rain' => t('Regnvejr'), default => t('Tørrevejr') }) ?> <?= e($weatherForecast['period']) ?></h2>
                 <p><?= e($weatherForecast['recommendation']) ?></p>
                 <ul class="weather-meta">
                     <li><?= icon('pin') ?><?= e($weatherForecast['location']) ?></li>

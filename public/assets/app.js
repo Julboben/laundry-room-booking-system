@@ -4,8 +4,6 @@ const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const DEFAULT_IDLE_SECONDS = 90;
 const SWIPE_DISTANCE_PX = 60;
 
-document.documentElement.classList.add('js');
-
 const body = document.body;
 
 function initConfirmForms() {
@@ -15,12 +13,6 @@ function initConfirmForms() {
                 event.preventDefault();
             }
         });
-    }
-}
-
-function initDatePicker() {
-    for (const input of document.querySelectorAll('form[data-date-picker] input[type="date"]')) {
-        input.addEventListener('change', () => input.form.requestSubmit());
     }
 }
 
@@ -48,15 +40,10 @@ function initCalendarDialog() {
     };
 
     for (const trigger of document.querySelectorAll('[data-calendar-open]')) {
-        trigger.hidden = false;
         trigger.addEventListener('click', () => {
             showMonth(activeIndex);
             dialog.showModal();
         });
-    }
-
-    for (const fallback of document.querySelectorAll('form[data-date-picker]')) {
-        fallback.hidden = true;
     }
 
     dialog.querySelector('[data-calendar-close]').addEventListener('click', () => dialog.close());
@@ -72,33 +59,144 @@ function initCalendarDialog() {
 }
 
 // Keeps the kiosk calendar current: reloads at the next slot change and at least every few minutes.
-function initAutoRefresh() {
+let refreshTimer;
+
+function scheduleRefresh() {
+    clearTimeout(refreshTimer);
     const refreshAt = Number(body.dataset.refreshAt);
 
     if (!refreshAt) {
         return;
     }
 
-    let timer;
-    const schedule = () => {
-        clearTimeout(timer);
-        const delay = Math.max(1000, Math.min(REFRESH_INTERVAL_MS, refreshAt - Date.now() + 1000));
-        timer = setTimeout(() => {
-            if (document.visibilityState === 'visible' && !document.querySelector('dialog[open]')) {
-                window.location.reload();
-            } else {
-                schedule();
-            }
-        }, delay);
-    };
+    const delay = Math.max(1000, Math.min(REFRESH_INTERVAL_MS, refreshAt - Date.now() + 1000));
+    refreshTimer = setTimeout(() => {
+        if (document.visibilityState === 'visible' && !document.querySelector('dialog[open]')) {
+            window.location.reload();
+        } else {
+            scheduleRefresh();
+        }
+    }, delay);
+}
 
+function initAutoRefresh() {
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && Date.now() >= refreshAt) {
+        const refreshAt = Number(body.dataset.refreshAt);
+
+        if (refreshAt && document.visibilityState === 'visible' && Date.now() >= refreshAt) {
             window.location.reload();
         }
     });
 
-    schedule();
+    scheduleRefresh();
+}
+
+// Switches days inside the page instead of a full navigation, so the screen never blanks.
+const DAY_CACHE_MS = 30 * 1000;
+const dayCache = new Map();
+
+function isCalendarUrl(url) {
+    return url.origin === window.location.origin && url.pathname === '/calendar.php';
+}
+
+function fetchDay(href) {
+    const cached = dayCache.get(href);
+
+    if (cached && Date.now() - cached.fetchedAt < DAY_CACHE_MS) {
+        return cached.html;
+    }
+
+    const html = fetch(href, { credentials: 'same-origin' }).then((response) => {
+        // A redirect away from the calendar means the session expired; let a real navigation handle it.
+        if (!response.ok || !isCalendarUrl(new URL(response.url))) {
+            throw new Error('Unexpected calendar response');
+        }
+
+        return response.text();
+    });
+    html.catch(() => dayCache.delete(href));
+    dayCache.set(href, { html, fetchedAt: Date.now() });
+
+    return html;
+}
+
+function prefetchNeighbourDays() {
+    const area = document.querySelector('[data-swipe-area]');
+
+    for (const url of [area?.dataset.previousUrl, area?.dataset.nextUrl]) {
+        if (url) {
+            fetchDay(new URL(url, window.location.href).href).catch(() => {});
+        }
+    }
+}
+
+async function showDay(href, { push = true } = {}) {
+    const current = document.querySelector('.daily-calendar');
+    let html;
+
+    try {
+        html = await fetchDay(href);
+    } catch {
+        window.location.assign(href);
+        return;
+    }
+
+    const page = new DOMParser().parseFromString(html, 'text/html');
+    const next = page.querySelector('.daily-calendar');
+
+    if (!current || !next) {
+        window.location.assign(href);
+        return;
+    }
+
+    const hadFocus = current.contains(document.activeElement);
+    document.querySelector('dialog[open]')?.close();
+    current.replaceWith(document.adoptNode(next));
+
+    const languageSwitch = page.querySelector('.language-switch');
+    if (languageSwitch) {
+        document.querySelector('.language-switch')?.replaceWith(document.adoptNode(languageSwitch));
+    }
+
+    document.title = page.title;
+    body.dataset.refreshAt = page.body.dataset.refreshAt ?? '';
+
+    if (push) {
+        window.history.pushState(null, '', href);
+    }
+
+    if (hadFocus) {
+        next.querySelector('[aria-current="date"]')?.focus({ preventScroll: true });
+    }
+
+    initCalendarSection();
+    scheduleRefresh();
+}
+
+function initDayNavigation() {
+    if (!document.querySelector('.daily-calendar')) {
+        return;
+    }
+
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+
+        if (!link || !link.closest('.daily-calendar') || event.defaultPrevented || event.button !== 0
+            || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+        }
+
+        const url = new URL(link.href);
+
+        if (isCalendarUrl(url)) {
+            event.preventDefault();
+            showDay(url.href);
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        showDay(window.location.href, { push: false });
+    });
 }
 
 // Sends the shared tablet back to the calendar when a resident walks away mid-flow.
@@ -177,14 +275,20 @@ function initSwipe() {
         const url = deltaX < 0 ? area.dataset.nextUrl : area.dataset.previousUrl;
 
         if (url) {
-            window.location.assign(url);
+            showDay(new URL(url, window.location.href).href);
         }
     });
 }
 
+// Everything inside the calendar section, which is replaced when the day changes.
+function initCalendarSection() {
+    initCalendarDialog();
+    initSwipe();
+    prefetchNeighbourDays();
+}
+
 initConfirmForms();
-initDatePicker();
-initCalendarDialog();
+initCalendarSection();
+initDayNavigation();
 initAutoRefresh();
 initIdleReturn();
-initSwipe();

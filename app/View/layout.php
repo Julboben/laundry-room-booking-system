@@ -55,6 +55,7 @@ function layout_start(string $title, bool $showNav = true, string $bodyClass = '
 <?php endif; ?>
 <?php if ($isCalendar): ?>
     <link rel="stylesheet" href="<?= e(asset_url('/assets/calendar.css')) ?>">
+    <noscript><link rel="stylesheet" href="<?= e(asset_url('/assets/noscript.css')) ?>"></noscript>
 <?php endif; ?>
     <script type="module" src="<?= e(asset_url('/assets/app.js')) ?>"></script>
 </head>

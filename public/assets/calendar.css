@@ -1,8 +1,4 @@
 /* Single-day, touch-first calendar. The whole screen fits one viewport. */
-@view-transition {
-    navigation: auto;
-}
-
 @layer pages {
     body.page-calendar .site-main {
         display: block;
@@ -31,7 +27,6 @@
 
     .day-title {
         min-width: 0;
-        view-transition-name: day-title;
     }
 
     .day-eyebrow {
@@ -68,10 +63,6 @@
             width: auto;
             min-height: 3rem;
             border-radius: var(--radius-pill);
-        }
-
-        .js & .btn {
-            display: none;
         }
     }
 
@@ -134,6 +125,13 @@
             background: var(--color-surface-muted);
         }
 
+        &.is-outside {
+            border-style: dashed;
+            color: var(--color-text-subtle);
+            background: transparent;
+            opacity: 0.55;
+        }
+
         &.is-selected {
             border-color: var(--color-action);
             color: var(--color-on-action);
@@ -182,7 +180,7 @@
     }
 
     @media (hover: hover) {
-        .day-chip:not(.is-selected):hover {
+        a.day-chip:not(.is-selected):hover {
             border-color: var(--green-300);
             background: var(--color-action-soft);
         }
@@ -214,7 +212,6 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: var(--space-3);
         list-style: none;
-        view-transition-name: day-slots;
     }
 
     .slot {
@@ -223,6 +220,7 @@
         --slot-surface: linear-gradient(165deg, var(--color-surface), var(--green-50));
         --slot-border: var(--green-200);
 
+        container: slot / size;
         min-width: 0;
         min-height: 0;
         display: flex;
@@ -791,10 +789,39 @@
             gap: var(--space-2);
         }
 
+        .weather-bar {
+            min-height: 0;
+            padding: var(--space-2) var(--space-3);
+            gap: var(--space-3);
+            border-radius: var(--radius-lg);
+        }
+
+        .weather-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+
+            & .icon {
+                width: 1.35rem;
+                height: 1.35rem;
+            }
+        }
+
+        .weather-copy p {
+            display: -webkit-box;
+            overflow: hidden;
+            font-size: var(--text-xs);
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+        }
+    }
+
+    /* Cards too short for the stacked layout (phones, short windows): one row per card */
+    @container slot (height < 340px) {
         .slot-card {
             padding: var(--space-2) var(--space-3);
             display: grid;
-            grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+            grid-template-columns: auto minmax(0, 1fr) auto;
             grid-template-areas:
                 "icon time action"
                 "icon title action"
@@ -858,32 +885,6 @@
                 display: none;
             }
         }
-
-        .weather-bar {
-            min-height: 0;
-            padding: var(--space-2) var(--space-3);
-            gap: var(--space-3);
-            border-radius: var(--radius-lg);
-        }
-
-        .weather-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-
-            & .icon {
-                width: 1.35rem;
-                height: 1.35rem;
-            }
-        }
-
-        .weather-copy p {
-            display: -webkit-box;
-            overflow: hidden;
-            font-size: var(--text-xs);
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-        }
     }
 
     /* Short landscape screens */
@@ -909,14 +910,6 @@
             width: 7rem;
         }
     }
-}
-
-::view-transition-old(day-slots),
-::view-transition-new(day-slots),
-::view-transition-old(day-title),
-::view-transition-new(day-title) {
-    animation-duration: var(--duration-slow);
-    animation-timing-function: var(--ease-standard);
 }
 
 @keyframes pulse {
