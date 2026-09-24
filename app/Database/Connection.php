@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LaundryBooking\Database;
 
+use LaundryBooking\Support\DateHelper;
 use LaundryBooking\Support\Env;
 use PDO;
 use PDOException;
@@ -43,7 +44,7 @@ final class Connection
         );
 
         try {
-            return new PDO($dsn, $username, $password, [
+            $pdo = new PDO($dsn, $username, $password, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
@@ -51,6 +52,11 @@ final class Connection
         } catch (PDOException $exception) {
             throw new PDOException('Database connection failed.', (int) $exception->getCode(), $exception);
         }
+
+        // Numeric offset, because named zones need MySQL's timezone tables loaded.
+        $pdo->exec("SET time_zone = '" . DateHelper::now()->format('P') . "'");
+
+        return $pdo;
     }
 
     /**

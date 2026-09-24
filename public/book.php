@@ -33,6 +33,7 @@ $bookingService = new BookingService($pdo, new CodeService(), $settingsService, 
 $date = Request::get('date', '') ?? '';
 $slotKey = Request::get('slot', '') ?? '';
 $error = null;
+$slotBlocked = false;
 $name = '';
 
 if (Request::isPost()) {
@@ -41,7 +42,7 @@ if (Request::isPost()) {
     $name = Request::post('booking_name', '') ?? '';
 
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
+        $error = t('Sikkerhedstjekket mislykkedes. Prøv igen.');
     } else {
         $result = $bookingService->create(
             $date,
@@ -68,30 +69,35 @@ if (Request::isPost()) {
     } elseif (!$bookingService->isAvailable($date, $slotKey)) {
         $error = t('Tiden er desværre allerede booket.');
     }
+    $slotBlocked = $error !== null;
 }
 
 $slots = BookingService::slots();
 $slot = $slots[$slotKey] ?? null;
+$hasValidSlot = $slot !== null && DateHelper::isValidDateString($date) && !$slotBlocked;
 $takeoverMinutes = $settingsService->getTakeoverRuleMinutes();
+$hasStarted = $hasValidSlot && DateHelper::fromDateString($date . ' ' . $slot['start']) <= DateHelper::now();
+$calendarUrl = DateHelper::isValidDateString($date) ? '/calendar.php?date=' . rawurlencode($date) : '/calendar.php';
 
-layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking');
+layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking', bodyData: ['idle-return' => $calendarUrl]);
 ?>
-<section class="card kiosk-card booking-card">
-    <h2><?= e(t('Bekræft din tid')) ?></h2>
+<section class="card kiosk-card booking-card" aria-labelledby="page-heading">
+    <h1 id="page-heading"><?= e(t('Bekræft din tid')) ?></h1>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
     <?php endif; ?>
 
-    <?php if ($slot !== null && DateHelper::isValidDateString($date)): ?>
+    <?php if ($hasValidSlot): ?>
         <div class="booking-summary">
-            <span class="booking-summary-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M7 3v3M17 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2Z"></path><path d="M8 13h3v3H8z"></path></svg>
-            </span>
+            <span class="booking-summary-icon" aria-hidden="true"><?= icon('calendar-day') ?></span>
             <div>
                 <strong><?= e(ucfirst(danish_date_long(DateHelper::fromDateString($date)))) ?></strong>
-                <span><?= e($slot['start']) ?>&ndash;<?= e($slot['end']) ?></span>
+                <span><?= e(t('Kl. %s', clock_range($slot['start'], $slot['end']))) ?></span>
             </div>
         </div>
+        <?php if ($hasStarted && $error === null): ?>
+            <p class="alert alert-info"><?= e(t('Tiden er allerede i gang – du har maskinerne til kl. %s.', clock_time($slot['end']))) ?></p>
+        <?php endif; ?>
         <form method="post" action="/book.php" novalidate>
             <?= Csrf::field() ?>
             <input type="hidden" name="date" value="<?= e($date) ?>">
@@ -105,30 +111,34 @@ layout_start('Bekræft booking', bodyClass: 'page-kiosk page-booking');
                 value="<?= e($name) ?>"
                 minlength="2"
                 maxlength="100"
+                autocomplete="off"
+                autocapitalize="words"
+                spellcheck="false"
+                enterkeyhint="done"
                 aria-describedby="name-help"
                 required
             >
-            <small class="form-hint" id="name-help"><?= e(t('Navnet vises på den bookede tid.')) ?></small>
+            <small class="form-hint" id="name-help"><?= e(t('Navnet vises i kalenderen, så andre kan se, hvem der har tiden. Fornavn og lejlighed er nok.')) ?></small>
 
             <div class="booking-notes">
-                <h3><?= e(t('Godt at vide')) ?></h3>
+                <h2><?= e(t('Godt at vide')) ?></h2>
                 <ul>
-                    <li>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-                        <span><?= e(t('Er tiden ikke taget i brug senest %d minutter efter start, må en anden beboer overtage den.', $takeoverMinutes)) ?></span>
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="m11 12 8-8M16 7l3 3"></path></svg>
-                        <span><?= e(t('Efter bookingen får du en aflysningskode. Gem den, hvis du får brug for at aflyse.')) ?></span>
-                    </li>
+                    <li><?= icon('clock') ?><span><?= e($hasStarted
+                        ? t('Er du ikke i gang senest %d minutter efter, at du har booket, må en anden beboer overtage tiden.', $takeoverMinutes)
+                        : t('Er du ikke i gang senest %d minutter efter starttid, må en anden beboer overtage tiden.', $takeoverMinutes)) ?></span></li>
+                    <li><?= icon('key') ?><span><?= e(t('Når du har booket, får du en aflysningskode. Gem den, så du kan aflyse senere.')) ?></span></li>
                 </ul>
             </div>
 
-            <button type="submit" class="btn btn-primary"><?= e(t('Bekræft booking')) ?></button>
-            <a class="btn btn-secondary" href="/calendar.php?date=<?= e($date) ?>"><?= e(t('Tilbage')) ?></a>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><?= e(t('Bekræft booking')) ?></button>
+                <a class="btn btn-secondary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage')) ?></a>
+            </div>
         </form>
     <?php else: ?>
-        <p><a class="btn btn-secondary" href="/calendar.php"><?= e(t('Tilbage')) ?></a></p>
+        <div class="form-actions">
+            <a class="btn btn-primary" href="<?= e($calendarUrl) ?>"><?= e(t('Tilbage til kalenderen')) ?></a>
+        </div>
     <?php endif; ?>
 </section>
 <?php

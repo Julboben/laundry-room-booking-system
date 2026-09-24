@@ -33,15 +33,6 @@ final class DateHelper
         return self::now()->setTime(0, 0);
     }
 
-    /**
-     * Returns the Monday of the week containing the given date.
-     */
-    public static function startOfWeek(DateTimeImmutable $date): DateTimeImmutable
-    {
-        $isoDay = (int) $date->format('N');
-        return $date->modify('-' . ($isoDay - 1) . ' days')->setTime(0, 0);
-    }
-
     public static function formatLong(DateTimeImmutable $date): string
     {
         $day = I18n::dayName((int) $date->format('N'));
@@ -52,13 +43,6 @@ final class DateHelper
         }
 
         return sprintf('%s %d. %s %s', $day, (int) $date->format('j'), $month, $date->format('Y'));
-    }
-
-    public static function formatShort(DateTimeImmutable $date): string
-    {
-        $day = I18n::dayName((int) $date->format('N'));
-
-        return sprintf('%s %d/%d', $day, (int) $date->format('j'), (int) $date->format('n'));
     }
 
     public static function isValidDateString(string $value): bool

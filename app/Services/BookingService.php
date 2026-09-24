@@ -67,20 +67,76 @@ final class BookingService
     }
 
     /**
+     * The last moment a free slot can be booked: the slot start plus the
+     * late-booking window, never later than the slot end.
+     *
+     * @param array{start:string,end:string} $slot
+     */
+    public static function bookingDeadlineFor(string $date, array $slot, int $lateBookingMinutes): DateTimeImmutable
+    {
+        $start = DateHelper::fromDateString($date . ' ' . $slot['start']);
+        $end = DateHelper::fromDateString($date . ' ' . $slot['end']);
+        $deadline = $start->modify('+' . max(0, $lateBookingMinutes) . ' minutes');
+
+        return min($deadline, $end);
+    }
+
+    /**
+     * @param array{start:string,end:string} $slot
+     */
+    public static function statusFor(
+        string $date,
+        array $slot,
+        bool $isBooked,
+        DateTimeImmutable $now,
+        int $lateBookingMinutes
+    ): SlotStatus {
+        $start = DateHelper::fromDateString($date . ' ' . $slot['start']);
+        $end = DateHelper::fromDateString($date . ' ' . $slot['end']);
+
+        if ($now >= $end) {
+            return SlotStatus::Past;
+        }
+
+        if ($now < $start) {
+            return $isBooked ? SlotStatus::Booked : SlotStatus::Available;
+        }
+
+        if ($isBooked) {
+            return SlotStatus::InProgress;
+        }
+
+        return $now < self::bookingDeadlineFor($date, $slot, $lateBookingMinutes)
+            ? SlotStatus::AvailableNow
+            : SlotStatus::Closed;
+    }
+
+    public function bookingDeadline(string $date, string $slotKey): DateTimeImmutable
+    {
+        return self::bookingDeadlineFor($date, self::slots()[$slotKey], $this->settings->getLateBookingMinutes());
+    }
+
+    public function slotStatus(string $date, string $slotKey, bool $isBooked, DateTimeImmutable $now): SlotStatus
+    {
+        return self::statusFor($date, self::slots()[$slotKey], $isBooked, $now, $this->settings->getLateBookingMinutes());
+    }
+
+    /**
      * Validate the requested date and slot, returning a localized error
      * message on failure or null on success.
      */
-    public function validateDateAndSlot(string $date, string $slotKey): ?string
+    public function validateDateAndSlot(string $date, string $slotKey, ?DateTimeImmutable $now = null): ?string
     {
         if (!DateHelper::isValidDateString($date)) {
             return I18n::translate('Datoen er ikke gyldig.');
         }
 
         if (!array_key_exists($slotKey, self::slots())) {
-            return I18n::translate('Tiden er ikke gyldig.');
+            return I18n::translate('Tidspunktet er ugyldigt.');
         }
 
-        $today = DateHelper::today();
+        $now ??= DateHelper::now();
+        $today = $now->setTime(0, 0);
         $requestedDate = DateHelper::fromDateString($date);
 
         if ($requestedDate < $today) {
@@ -91,14 +147,11 @@ final class BookingService
         $latestDate = $today->modify('+' . $weeksAhead . ' weeks');
 
         if ($requestedDate > $latestDate) {
-            return I18n::translate('Datoen ligger for langt ude i fremtiden.');
+            return I18n::translate('Du kan højst booke %d uger frem.', $weeksAhead);
         }
 
-        $slot = self::slots()[$slotKey];
-        $slotStart = DateHelper::fromDateString($date . ' ' . $slot['start']);
-
-        if ($slotStart <= DateHelper::now()) {
-            return I18n::translate('Denne tid er allerede startet.');
+        if ($now >= $this->bookingDeadline($date, $slotKey)) {
+            return I18n::translate('Tiden kan ikke længere bookes.');
         }
 
         return null;
@@ -253,7 +306,7 @@ final class BookingService
                 $this->pdo->rollBack();
                 return new BookingCancellationResult(
                     false,
-                    error: I18n::translate('Bookingen findes ikke.')
+                    error: I18n::translate('Bookingen findes ikke længere.')
                 );
             }
 

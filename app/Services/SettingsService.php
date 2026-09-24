@@ -13,6 +13,9 @@ use LaundryBooking\Support\Env;
  */
 final class SettingsService
 {
+    public const int DEFAULT_LATE_BOOKING_MINUTES = 120;
+    public const int MAX_LATE_BOOKING_MINUTES = 180;
+
     public function __construct(
         private readonly Setting $settings
     ) {
@@ -55,6 +58,22 @@ final class SettingsService
         $value = $this->settings->get('takeover_rule_minutes');
 
         return $value !== null && $value !== '' ? (int) $value : 30;
+    }
+
+    public function getLateBookingMinutes(): int
+    {
+        $value = $this->settings->get('late_booking_minutes');
+
+        if ($value === null || $value === '') {
+            return self::DEFAULT_LATE_BOOKING_MINUTES;
+        }
+
+        return max(0, min(self::MAX_LATE_BOOKING_MINUTES, (int) $value));
+    }
+
+    public function setLateBookingMinutes(int $minutes): void
+    {
+        $this->settings->set('late_booking_minutes', (string) $minutes);
     }
 
     public function getCalendarMessage(): string

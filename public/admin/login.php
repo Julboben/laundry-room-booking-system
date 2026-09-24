@@ -14,6 +14,7 @@ use LaundryBooking\Security\RateLimiter;
 
 use function LaundryBooking\Support\e;
 use function LaundryBooking\Support\t;
+use function LaundryBooking\Support\tn;
 
 $adminAuth = new AdminAuth(new RateLimiter(Connection::get()), Request::ip());
 
@@ -25,10 +26,10 @@ $error = null;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
+        $error = t('Sikkerhedstjekket mislykkedes. Prøv igen.');
     } elseif ($adminAuth->isLockedOut()) {
         $minutes = (int) ceil($adminAuth->lockoutRemainingSeconds() / 60);
-        $error = t('For mange forsøg. Prøv igen om ca. %d minutter.', $minutes);
+        $error = tn($minutes, 'For mange forsøg. Prøv igen om ca. %d minut.', 'For mange forsøg. Prøv igen om ca. %d minutter.');
     } else {
         $username = Request::post('username', '') ?? '';
         $password = Request::post('password', '') ?? '';
@@ -44,7 +45,7 @@ if (Request::isPost()) {
 layout_start('Administrator login', showNav: false);
 ?>
 <section class="card">
-    <h2><?= e(t('Administrator login')) ?></h2>
+    <h1><?= e(t('Administrator login')) ?></h1>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
     <?php endif; ?>

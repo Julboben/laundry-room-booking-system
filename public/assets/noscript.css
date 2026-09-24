@@ -1,0 +1,4 @@
+/* Loaded only when JavaScript is disabled: the date dialog needs JS, so the native date form is used instead. */
+.calendar-trigger {
+    display: none;
+}

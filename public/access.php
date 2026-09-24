@@ -16,6 +16,7 @@ use LaundryBooking\Services\SettingsService;
 
 use function LaundryBooking\Support\e;
 use function LaundryBooking\Support\t;
+use function LaundryBooking\Support\tn;
 
 $pdo = Connection::get();
 $settingsService = new SettingsService(new Setting($pdo));
@@ -29,10 +30,10 @@ $error = null;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
+        $error = t('Sikkerhedstjekket mislykkedes. Prøv igen.');
     } elseif ($residentAccess->isLockedOut()) {
         $minutes = (int) ceil($residentAccess->lockoutRemainingSeconds() / 60);
-        $error = t('For mange forsøg. Prøv igen om ca. %d minutter.', $minutes);
+        $error = tn($minutes, 'For mange forsøg. Prøv igen om ca. %d minut.', 'For mange forsøg. Prøv igen om ca. %d minutter.');
     } else {
         $code = Request::post('property_code', '') ?? '';
 
@@ -40,30 +41,33 @@ if (Request::isPost()) {
             Response::redirect('/calendar.php');
         }
 
-        $error = t('Koden er ikke korrekt. Prøv igen.');
+        $error = t('Forkert kode. Prøv igen.');
     }
 }
 
 layout_start('Adgang', showNav: false, bodyClass: 'page-kiosk page-access');
 ?>
-<section class="card kiosk-card access-card">
-    <h2><?= e(t('Ejendomskode')) ?></h2>
-    <p><?= e(t('Indtast ejendommens fælles adgangskode for at se og booke tider i vaskekalenderen.')) ?></p>
+<section class="card kiosk-card access-card" aria-labelledby="page-heading">
+    <?= illustration('tip', 'card-illustration') ?>
+    <h1 id="page-heading"><?= e(t('Velkommen')) ?></h1>
+    <p><?= e(t('Indtast ejendommens fælles kode for at se og booke vasketider.')) ?></p>
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
     <?php endif; ?>
     <form method="post" action="/access.php" novalidate>
         <?= Csrf::field() ?>
-        <label for="property_code"><?= e(t('Ejendomskode')) ?></label>
+        <label for="property_code"><?= e(t('Adgangskode')) ?></label>
         <input
             type="password"
             id="property_code"
             name="property_code"
+            class="code-input"
             autocomplete="off"
             inputmode="numeric"
+            enterkeyhint="go"
             required
         >
-        <button type="submit" class="btn btn-primary"><?= e(t('Gem')) ?></button>
+        <button type="submit" class="btn btn-primary"><?= e(t('Fortsæt')) ?></button>
     </form>
 </section>
 <?php

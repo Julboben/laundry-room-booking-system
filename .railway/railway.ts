@@ -69,7 +69,24 @@ export default defineRailway(() => {
     },
   });
 
+  const weather = service("weather", {
+    source: github("Julboben/laundry-room-booking-system", {
+      branch: "main",
+    }),
+    start: "php scripts/refresh_weather.php",
+    deploy: {
+      cronSchedule: "*/30 * * * *",
+      restartPolicyType: "NEVER",
+    },
+    env: {
+      ...databaseEnvironment,
+      APP_ENV: "production",
+      APP_DEBUG: "false",
+      APP_TIMEZONE: "Europe/Copenhagen",
+    },
+  });
+
   return project("laundry-room-booking-system", {
-    resources: [database, web, cleanup],
+    resources: [database, web, cleanup, weather],
   });
 });

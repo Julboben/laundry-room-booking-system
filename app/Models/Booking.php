@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace LaundryBooking\Models;
 
+use DateTimeImmutable;
+use LaundryBooking\Support\DateHelper;
+
 /**
  * Simple read-model representing a row from the bookings table.
  * The cancellation_code_hash is intentionally never exposed here.
@@ -35,5 +38,17 @@ final class Booking
             bookingName: (string) $row['booking_name'],
             createdAt: (string) $row['created_at'],
         );
+    }
+
+    /**
+     * When other residents may take over an unused slot: counted from the
+     * slot start, or from the booking time if it was booked after the start.
+     */
+    public function takeoverAt(int $takeoverMinutes): DateTimeImmutable
+    {
+        $slotStart = DateHelper::fromDateString($this->bookingDate . ' ' . $this->startTime);
+        $bookedAt = DateHelper::fromDateString($this->createdAt);
+
+        return max($slotStart, $bookedAt)->modify('+' . $takeoverMinutes . ' minutes');
     }
 }

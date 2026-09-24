@@ -37,7 +37,7 @@ $success = null;
 
 if (Request::isPost()) {
     if (!Csrf::verify(Request::post('csrf_token'))) {
-        $error = t('Sikkerhedstjek fejlede. Prøv igen.');
+        $error = t('Sikkerhedstjekket mislykkedes. Prøv igen.');
     } else {
         $deleteId = (int) (Request::post('delete_id') ?? '0');
 
@@ -50,7 +50,7 @@ if (Request::isPost()) {
 
                 if ($statement->rowCount() === 0) {
                     $pdo->rollBack();
-                    $error = t('Bookingen findes ikke.');
+                    $error = t('Bookingen findes ikke længere.');
                 } else {
                     $activityLog->log(
                         actorType: 'admin',
@@ -110,8 +110,8 @@ $bookings = $statement->fetchAll();
 layout_start('Bookinger');
 ?>
 <section class="card">
-    <h2><?= e(t('Bookinger')) ?></h2>
-    <p><a href="/admin/index.php"><?= e(t('« Tilbage til administration')) ?></a></p>
+    <h1><?= e(t('Bookinger')) ?></h1>
+    <a class="back-link" href="/admin/index.php"><?= icon('chevron-left') ?><?= e(t('Tilbage til administration')) ?></a>
 
     <?php if ($error !== null): ?>
         <p class="alert alert-error" role="alert"><?= e($error) ?></p>
@@ -120,18 +120,23 @@ layout_start('Bookinger');
         <p class="alert alert-success" role="status"><?= e($success) ?></p>
     <?php endif; ?>
 
-    <form method="get" action="/admin/bookings.php" class="filter-form">
-        <label for="date_from"><?= e(t('Fra dato')) ?></label>
-        <input type="date" id="date_from" name="date_from" value="<?= e($dateFrom) ?>">
-
-        <label for="date_to"><?= e(t('Til dato')) ?></label>
-        <input type="date" id="date_to" name="date_to" value="<?= e($dateTo) ?>">
-
-        <label for="search"><?= e(t('Søg navn')) ?></label>
-        <input type="text" id="search" name="search" value="<?= e($search) ?>">
-
-        <button type="submit" class="btn btn-secondary"><?= e(t('Filtrer')) ?></button>
-    </form>
+    <search>
+        <form method="get" action="/admin/bookings.php" class="filter-form">
+            <div>
+                <label for="date_from"><?= e(t('Fra dato')) ?></label>
+                <input type="date" id="date_from" name="date_from" value="<?= e($dateFrom) ?>">
+            </div>
+            <div>
+                <label for="date_to"><?= e(t('Til dato')) ?></label>
+                <input type="date" id="date_to" name="date_to" value="<?= e($dateTo) ?>">
+            </div>
+            <div>
+                <label for="search"><?= e(t('Søg navn')) ?></label>
+                <input type="search" id="search" name="search" value="<?= e($search) ?>">
+            </div>
+            <button type="submit" class="btn btn-secondary"><?= e(t('Filtrer')) ?></button>
+        </form>
+    </search>
 
     <table class="bookings-table">
         <thead>
@@ -146,10 +151,10 @@ layout_start('Bookinger');
         <tbody>
         <?php foreach ($bookings as $booking): ?>
             <tr>
-                <td><?= e($booking['booking_date']) ?></td>
-                <td><?= e(substr($booking['start_time'], 0, 5)) ?>&ndash;<?= e(substr($booking['end_time'], 0, 5)) ?></td>
+                <td><time datetime="<?= e($booking['booking_date']) ?>"><?= e(short_date((string) $booking['booking_date'])) ?></time></td>
+                <td><?= e(clock_range($booking['start_time'], $booking['end_time'])) ?></td>
                 <td><?= e($booking['booking_name']) ?></td>
-                <td><?= e($booking['created_at']) ?></td>
+                <td><?= e(short_datetime((string) $booking['created_at'])) ?></td>
                 <td>
                     <form method="post" action="/admin/bookings.php" data-confirm="<?= e(t('Slet denne booking?')) ?>">
                         <?= Csrf::field() ?>
