@@ -582,6 +582,22 @@
             opacity: 0.35;
         }
 
+        &.is-today {
+            border-color: var(--green-500);
+            box-shadow: inset 0 0 0 1px var(--green-500);
+            font-weight: var(--weight-bold);
+
+            &.is-selected {
+                box-shadow: inset 0 0 0 2px var(--color-on-action);
+            }
+
+            &.is-outside {
+                border-style: dashed;
+                box-shadow: none;
+                opacity: 0.6;
+            }
+        }
+
         &.is-blank {
             visibility: hidden;
         }
@@ -620,9 +636,18 @@
         font-size: var(--text-xs);
 
         & .dot + .dot,
-        & .dot:not(:first-child) {
+        & .dot:not(:first-child),
+        & .legend-today {
             margin-left: var(--space-3);
         }
+    }
+
+    .legend-today {
+        width: 0.9rem;
+        height: 0.9rem;
+        display: inline-block;
+        border: 2px solid var(--green-500);
+        border-radius: 4px;
     }
 
     /* Weather bar */

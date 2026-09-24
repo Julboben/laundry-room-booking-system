@@ -207,7 +207,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
                     <a
                         class="<?= e($chipClasses) ?>"
                         href="<?= e($calendarUrl($stripDate)) ?>"
-                        aria-label="<?= e(danish_date_long($stripDate) . ', ' . $availabilityLabel($stripDateString)) ?>"
+                        aria-label="<?= e(danish_date_long($stripDate) . ($stripDate == $today ? ', ' . t('i dag') : '') . ', ' . $availabilityLabel($stripDateString)) ?>"
                         <?= $isSelected ? 'aria-current="date"' : '' ?>
                     >
                         <span class="day-chip-weekday"><?= e($weekdayLabel) ?></span>
@@ -254,12 +254,13 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
                     $calendarDate = $calendarMonth->setDate((int) $calendarMonth->format('Y'), (int) $calendarMonth->format('n'), $dayNumber);
                     $calendarDateString = $calendarDate->format('Y-m-d');
                     $monthBookable = $bookableByDate[$calendarDateString] ?? null;
+                    $calendarIsToday = $calendarDateString === $today->format('Y-m-d');
                     ?>
                     <?php if ($monthBookable !== null): ?>
                         <a
-                            class="calendar-date<?= $calendarDateString === $dateString ? ' is-selected' : '' ?><?= !in_array(true, $monthBookable, true) ? ' is-full' : '' ?>"
+                            class="calendar-date<?= $calendarDateString === $dateString ? ' is-selected' : '' ?><?= $calendarIsToday ? ' is-today' : '' ?><?= !in_array(true, $monthBookable, true) ? ' is-full' : '' ?>"
                             href="<?= e($calendarUrl($calendarDate)) ?>"
-                            aria-label="<?= e(danish_date_long($calendarDate) . ', ' . $availabilityLabel($calendarDateString)) ?>"
+                            aria-label="<?= e(danish_date_long($calendarDate) . ($calendarIsToday ? ', ' . t('i dag') : '') . ', ' . $availabilityLabel($calendarDateString)) ?>"
                             <?= $calendarDateString === $dateString ? 'aria-current="date"' : '' ?>
                         >
                             <span class="calendar-date-number"><?= $dayNumber ?></span>
@@ -268,7 +269,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
                             </span>
                         </a>
                     <?php else: ?>
-                        <span class="calendar-date is-outside" aria-hidden="true"><span class="calendar-date-number"><?= $dayNumber ?></span></span>
+                        <span class="calendar-date is-outside<?= $calendarIsToday ? ' is-today' : '' ?>" aria-hidden="true"><span class="calendar-date-number"><?= $dayNumber ?></span></span>
                     <?php endif; ?>
                 <?php endfor; ?>
             </div>
@@ -276,6 +277,7 @@ layout_start('Kalender', bodyClass: 'page-kiosk page-calendar', bodyData: [
         <p class="calendar-legend" aria-hidden="true">
             <span class="dot is-free"></span> <?= e(t('Ledig tid')) ?>
             <span class="dot"></span> <?= e(t('Booket eller overstået')) ?>
+            <span class="legend-today"></span> <?= e(t('I dag')) ?>
         </p>
     </dialog>
 
